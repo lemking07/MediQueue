@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        MediQueue - Patient Portal
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+    <div class="patient-page">
+
+        <header class="patient-header">
+
+            <div class="brand">
+
+                <div class="brand-icon">
+                    +
+                </div>
+
+                <div>
+
+                    <h1>
+                        MediQueue
+                    </h1>
+
+                    <p>
+                        Smart Hospital Queue Management System
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="patient-connection"
+                class="connection-badge offline"
+            >
+                Connecting...
+            </div>
+
+        </header>
+
+
+        <main class="patient-main">
+
+            <!-- ======================================= -->
+            <!-- DEPARTMENT SELECTION -->
+            <!-- ======================================= -->
+
+            <section
+                id="department-section"
+                class="patient-card"
+            >
+
+                <div class="section-heading">
+
+                    <span class="section-kicker">
+                        PATIENT PORTAL
+                    </span>
+
+                    <h2>
+                        Select Your Department
+                    </h2>
+
+                    <p>
+                        Choose the department you want to visit.
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="department-list"
+                >
+                </div>
+
+            </section>
+
+
+            <!-- ======================================= -->
+            <!-- PATIENT TICKET -->
+            <!-- ======================================= -->
+
+            <section
+                id="ticket-section"
+                class="patient-card"
+                style="display: none;"
+            >
+
+                <span class="section-kicker">
+                    YOUR QUEUE TICKET
+                </span>
+
+
+                <h2
+                    id="ticket-department"
+                >
+                    Department
+                </h2>
+
+
+                <p class="small-label">
+                    Queue Number
+                </p>
+
+
+                <div
+                    id="ticket-number"
+                    class="queue-number-display"
+                >
+                    C001
+                </div>
+
+
+                <div class="ticket-grid">
+
+                    <div class="ticket-stat">
+
+                        <span>
+                            Status
+                        </span>
+
+                        <strong
+                            id="ticket-status"
+                        >
+                            Waiting
+                        </strong>
+
+                    </div>
+
+
+                    <div class="ticket-stat">
+
+                        <span>
+                            People Before You
+                        </span>
+
+                        <strong
+                            id="people-before"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="room-message"
+                    class="called-panel"
+                    style="display: none;"
+                >
+
+                    <div class="called-icon">
+                        ✓
+                    </div>
+
+                    <h2>
+                        Your Number Has Been Called
+                    </h2>
+
+                    <p>
+                        Please proceed to
+                    </p>
+
+                    <div
+                        id="assigned-room"
+                        class="room-display"
+                    >
+                        Room 1
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="enable-sound-button"
+                    class="button secondary-button"
+                >
+                    🔔 Enable Sound & Notifications
+                </button>
+
+
+                <button
+                    id="new-queue-button"
+                    class="button"
+                >
+                    Take New Queue Number
+                </button>
+
+            </section>
+
+        </main>
+
+
+        <footer class="patient-footer">
+
+            <p>
+                MediQueue • Real-Time Hospital Queue
+            </p>
+
+        </footer>
+
+    </div>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="patient.js"></script>
+
+</body>
+
+</html>

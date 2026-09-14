@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        MediQueue - Staff Dashboard
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+    <div class="staff-layout">
+
+        <!-- ========================================= -->
+        <!-- HEADER -->
+        <!-- ========================================= -->
+
+        <header class="staff-header">
+
+            <div class="staff-brand">
+
+                <div class="brand-icon">
+                    +
+                </div>
+
+
+                <div>
+
+                    <h1>
+                        MediQueue
+                    </h1>
+
+                    <p>
+                        Staff Dashboard
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="header-right">
+
+                <div class="clock-box">
+
+                    <strong
+                        id="live-time"
+                    >
+                        --:--:--
+                    </strong>
+
+                    <span
+                        id="live-date"
+                    >
+                        Loading...
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="staff-connection"
+                    class="connection-badge offline"
+                >
+                    Connecting...
+                </div>
+
+
+                <a
+                    href="/logout.html"
+                    class="logout-button"
+                >
+                    Logout
+                </a>
+
+            </div>
+
+        </header>
+
+
+        <main class="staff-main">
+
+            <!-- ========================================= -->
+            <!-- SUMMARY -->
+            <!-- ========================================= -->
+
+            <section class="dashboard-summary">
+
+                <div class="summary-card">
+
+                    <span>
+                        Departments
+                    </span>
+
+                    <strong
+                        id="summary-departments"
+                    >
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        Waiting
+                    </span>
+
+                    <strong
+                        id="summary-waiting"
+                    >
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        Busy Rooms
+                    </span>
+
+                    <strong
+                        id="summary-busy"
+                    >
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        Available Rooms
+                    </span>
+
+                    <strong
+                        id="summary-available"
+                    >
+                        0
+                    </strong>
+
+                </div>
+
+            </section>
+
+
+            <!-- ========================================= -->
+            <!-- ADD DEPARTMENT -->
+            <!-- ========================================= -->
+
+            <section class="admin-panel">
+
+                <div class="panel-heading">
+
+                    <div>
+
+                        <span class="section-kicker">
+                            CUSTOMIZATION
+                        </span>
+
+                        <h2>
+                            Add Department
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    id="add-department-form"
+                    class="inline-form"
+                >
+
+                    <input
+                        id="new-department-name"
+                        type="text"
+                        placeholder="Department name"
+                        required
+                    >
+
+
+                    <input
+                        id="new-department-prefix"
+                        type="text"
+                        placeholder="Prefix e.g. C"
+                        maxlength="4"
+                        required
+                    >
+
+
+                    <button
+                        type="submit"
+                        class="button compact-button"
+                    >
+                        + Add Department
+                    </button>
+
+                </form>
+
+            </section>
+
+
+            <!-- ========================================= -->
+            <!-- DEPARTMENT LIST -->
+            <!-- ========================================= -->
+
+            <section>
+
+                <div class="dashboard-section-heading">
+
+                    <div>
+
+                        <span class="section-kicker">
+                            LIVE QUEUE CONTROL
+                        </span>
+
+                        <h2>
+                            Departments
+                        </h2>
+
+                    </div>
+
+
+                    <span class="live-hint">
+                        Updates automatically
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="departments-container"
+                    class="department-admin-grid"
+                >
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- TOAST -->
+
+    <div
+        id="toast"
+        class="toast"
+    >
+    </div>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="staff.js"></script>
+
+</body>
+
+</html>

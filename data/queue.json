@@ -1,0 +1,71 @@
+{
+  "departments": [
+    {
+      "id": 1,
+      "name": "Cardiology",
+      "prefix": "C",
+      "rooms": [
+        {
+          "number": "Room 1",
+          "status": "busy",
+          "currentQueue": "C011"
+        },
+        {
+          "number": "Room 2",
+          "status": "busy",
+          "currentQueue": "C006"
+        },
+        {
+          "number": "Room 3",
+          "status": "busy",
+          "currentQueue": "C007"
+        }
+      ],
+      "open": true,
+      "nextNumber": 12,
+      "waiting": []
+    },
+    {
+      "id": 2,
+      "name": "Blood Bank",
+      "prefix": "B",
+      "rooms": [
+        {
+          "number": "Room 5",
+          "status": "available",
+          "currentQueue": null
+        }
+      ],
+      "open": true,
+      "nextNumber": 3,
+      "waiting": [
+        "B001",
+        "B002"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Dermatology",
+      "prefix": "S",
+      "rooms": [],
+      "open": true,
+      "nextNumber": 4,
+      "waiting": [
+        "S001",
+        "S002",
+        "S003"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Orthopedics",
+      "prefix": "O",
+      "rooms": [],
+      "open": true,
+      "nextNumber": 2,
+      "waiting": [
+        "O001"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Staff Login</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+    <div class="container">
+
+        <div class="queue-box">
+
+            <h1>
+                Staff Login
+            </h1>
+
+            <p>
+                Login to access the hospital staff dashboard.
+            </p>
+
+
+            <form id="login-form">
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Username"
+                    autocomplete="username"
+                    required
+                    style="
+                        width: 100%;
+                        padding: 15px;
+                        margin-bottom: 15px;
+                        border: 1px solid #ccc;
+                        border-radius: 8px;
+                        font-size: 16px;
+                    "
+                >
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Password"
+                    autocomplete="current-password"
+                    required
+                    style="
+                        width: 100%;
+                        padding: 15px;
+                        margin-bottom: 15px;
+                        border: 1px solid #ccc;
+                        border-radius: 8px;
+                        font-size: 16px;
+                    "
+                >
+
+                <button
+                    type="submit"
+                    class="button"
+                >
+                    Login
+                </button>
+
+            </form>
+
+
+            <p
+                id="login-message"
+                style="
+                    color: red;
+                    margin-top: 15px;
+                "
+            >
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        const loginForm =
+            document.getElementById(
+                "login-form"
+            );
+
+        const loginMessage =
+            document.getElementById(
+                "login-message"
+            );
+
+
+        loginForm.addEventListener(
+            "submit",
+            async function(event) {
+
+                event.preventDefault();
+
+
+                loginMessage.textContent =
+                    "Logging in...";
+
+
+                const username =
+                    document.getElementById(
+                        "username"
+                    ).value.trim();
+
+
+                const password =
+                    document.getElementById(
+                        "password"
+                    ).value;
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "/api/staff/login",
+                            {
+                                method:
+                                    "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+                                        username:
+                                            username,
+
+                                        password:
+                                            password
+                                    })
+                            }
+                        );
+
+
+                    const result =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        loginMessage.textContent =
+                            result.error ||
+                            "Login failed.";
+
+                        return;
+                    }
+
+
+                    window.location.replace(
+                        "/staff.html"
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Login error:",
+                        error
+                    );
+
+                    loginMessage.textContent =
+                        "Unable to connect to server.";
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
