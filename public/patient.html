@@ -10,7 +10,12 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>
+    <meta
+        name="theme-color"
+        content="#0F9D8A"
+    >
+
+    <title id="page-title">
         MediQueue - Patient Portal
     </title>
 
@@ -22,26 +27,82 @@
 </head>
 
 
-<body>
+<body class="patient-portal-body">
 
-    <div class="patient-page">
+
+<!-- ================================================== -->
+<!-- PATIENT PORTAL -->
+<!-- ================================================== -->
+
+<div
+    id="patient-page"
+    class="patient-page"
+>
+
+
+    <!-- ============================================== -->
+    <!-- DECORATIVE BACKGROUND -->
+    <!-- ============================================== -->
+
+    <div
+        class="patient-background-decoration"
+        aria-hidden="true"
+    >
+
+        <div class="patient-bg-shape shape-one"></div>
+        <div class="patient-bg-shape shape-two"></div>
+        <div class="patient-bg-shape shape-three"></div>
+
+    </div>
+
+
+    <!-- ============================================== -->
+    <!-- MAIN PORTAL CONTAINER -->
+    <!-- ============================================== -->
+
+    <div class="patient-portal-container">
+
+
+        <!-- ========================================== -->
+        <!-- HEADER -->
+        <!-- ========================================== -->
 
         <header class="patient-header">
 
-            <div class="brand">
+            <div class="patient-brand-area">
 
-                <div class="brand-icon">
-                    +
+                <div class="patient-logo-wrapper">
+
+                    <!-- DEFAULT LOGO -->
+
+                    <div
+                        id="patient-default-logo"
+                        class="brand-icon patient-default-logo"
+                    >
+                        +
+                    </div>
+
+
+                    <!-- CUSTOM LOGO -->
+
+                    <img
+                        id="patient-custom-logo"
+                        class="patient-custom-logo"
+                        alt="Hospital Logo"
+                        style="display: none;"
+                    >
+
                 </div>
 
-                <div>
 
-                    <h1>
+                <div class="patient-brand-text">
+
+                    <h1 id="patient-system-name">
                         MediQueue
                     </h1>
 
-                    <p>
-                        Smart Hospital Queue Management System
+                    <p class="patient-brand-subtitle">
+                        Digital Queue Service
                     </p>
 
                 </div>
@@ -49,120 +110,506 @@
             </div>
 
 
-            <div
-                id="patient-connection"
-                class="connection-badge offline"
-            >
-                Connecting...
-            </div>
+            <!-- CONNECTION -->
+
+            <!-- LIVE TIME, DATE & CONNECTION -->
+
+<div class="patient-header-right">
+
+    <div class="patient-live-datetime">
+
+        <div id="patient-live-time">
+            --:--:--
+        </div>
+
+        <div id="patient-live-date">
+            Loading date...
+        </div>
+
+    </div>
+
+    <div
+        id="patient-connection"
+        class="connection-badge offline"
+    >
+
+        <span class="connection-dot"></span>
+
+        <span id="patient-connection-text">
+            Connecting...
+        </span>
+
+    </div>
+
+</div>
 
         </header>
 
 
-        <main class="patient-main">
+        <!-- ========================================== -->
+        <!-- OPTIONAL BANNER -->
+        <!-- ========================================== -->
 
-            <!-- ======================================= -->
-            <!-- DEPARTMENT SELECTION -->
-            <!-- ======================================= -->
+        <div
+            id="patient-banner"
+            class="patient-banner"
+            style="display: none;"
+        >
 
-            <section
-                id="department-section"
-                class="patient-card"
+            <img
+                id="patient-banner-image"
+                alt="Hospital Banner"
             >
 
-                <div class="section-heading">
+            <div class="patient-banner-overlay"></div>
+
+        </div>
+
+
+        <!-- ========================================== -->
+        <!-- CUSTOMIZABLE SECTIONS -->
+        <!-- ========================================== -->
+
+        <main
+            id="patient-sections"
+            class="patient-main"
+        >
+
+
+            <!-- ====================================== -->
+            <!-- WELCOME -->
+            <!-- ====================================== -->
+
+            <section
+                id="patient-welcome-section"
+                class="portal-section patient-welcome-section"
+                data-portal-section="welcome"
+            >
+
+                <div class="welcome-content">
 
                     <span class="section-kicker">
                         PATIENT PORTAL
                     </span>
 
+
                     <h2>
-                        Select Your Department
+                        Welcome to
+                        <span id="patient-welcome-system-name">
+                            MediQueue
+                        </span>
                     </h2>
 
-                    <p>
-                        Choose the department you want to visit.
+
+                    <p id="patient-welcome-text">
+                        Smart Hospital Queue Management System
                     </p>
+
+
+                    <div class="welcome-features">
+
+                        <div class="welcome-feature">
+
+                            <span class="welcome-feature-icon">
+                                01
+                            </span>
+
+                            <span>
+                                Choose Department
+                            </span>
+
+                        </div>
+
+
+                        <div class="welcome-feature">
+
+                            <span class="welcome-feature-icon">
+                                02
+                            </span>
+
+                            <span>
+                                Get Queue Number
+                            </span>
+
+                        </div>
+
+
+                        <div class="welcome-feature">
+
+                            <span class="welcome-feature-icon">
+                                03
+                            </span>
+
+                            <span>
+                                Wait for Your Call
+                            </span>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
 
                 <div
-                    class="department-list"
+    class="welcome-visual"
+    aria-hidden="true"
+>
+
+    <!-- DEFAULT WEBSITE BRAND MARK -->
+
+    <div
+        id="welcome-default-logo"
+        class="welcome-medical-symbol"
+    >
+        +
+    </div>
+
+
+    <!-- CUSTOM WEBSITE LOGO -->
+
+    <img
+        id="welcome-custom-logo"
+        class="welcome-custom-website-logo"
+        alt=""
+        style="display: none;"
+    >
+
+
+    <div class="welcome-ring ring-one"></div>
+
+    <div class="welcome-ring ring-two"></div>
+
+</div>
+
+            </section>
+
+
+            <!-- ====================================== -->
+            <!-- ANNOUNCEMENT -->
+            <!-- ====================================== -->
+
+            <section
+                id="patient-announcement-section"
+                class="portal-section"
+                data-portal-section="announcement"
+            >
+
+                <div
+                    id="patient-announcement"
+                    class="patient-announcement"
+                    style="display: none;"
                 >
+
+                    <div class="announcement-icon">
+                        !
+                    </div>
+
+
+                    <div class="announcement-content">
+
+                        <strong>
+                            Hospital Announcement
+                        </strong>
+
+                        <p id="patient-announcement-text"></p>
+
+                    </div>
+
                 </div>
 
             </section>
 
 
-            <!-- ======================================= -->
+            <!-- ====================================== -->
+            <!-- DEPARTMENT SELECTION -->
+            <!-- ====================================== -->
+
+            <section
+                id="department-section"
+                class="portal-section patient-card department-section"
+                data-portal-section="departments"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-kicker">
+                            GET STARTED
+                        </span>
+
+
+                        <h2>
+                            Select Your Department
+                        </h2>
+
+
+                        <p>
+                            Choose the department you are visiting
+                            to receive your queue number.
+                        </p>
+
+                    </div>
+
+
+                    <div
+    class="department-heading-brand"
+    aria-hidden="true"
+>
+
+    <!-- DEFAULT WEBSITE BRAND MARK -->
+
+    <div
+        id="department-heading-default-logo"
+        class="department-heading-icon"
+    >
+        +
+    </div>
+
+
+    <!-- CUSTOM WEBSITE LOGO -->
+
+    <img
+        id="department-heading-custom-logo"
+        class="department-heading-custom-logo"
+        alt=""
+        style="display: none;"
+    >
+
+</div>
+
+                </div>
+
+
+                <!-- DEPARTMENTS GENERATED BY patient.js -->
+
+                <div
+                    id="department-list"
+                    class="department-list"
+                >
+
+                    <div class="patient-loading-state">
+
+                        <div class="patient-loading-spinner"></div>
+
+                        <p>
+                            Loading departments...
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ====================================== -->
             <!-- PATIENT TICKET -->
-            <!-- ======================================= -->
+            <!-- ====================================== -->
 
             <section
                 id="ticket-section"
-                class="patient-card"
+                class="portal-section patient-card ticket-section"
+                data-portal-section="ticket"
                 style="display: none;"
             >
 
-                <span class="section-kicker">
-                    YOUR QUEUE TICKET
-                </span>
+
+                <!-- TICKET TOP -->
+
+                <div class="ticket-header">
+
+                    <div>
+
+                        <span class="section-kicker">
+                            YOUR QUEUE TICKET
+                        </span>
 
 
-                <h2
-                    id="ticket-department"
-                >
-                    Department
-                </h2>
+                        <h2 id="ticket-department">
+                            Department
+                        </h2>
+
+                    </div>
 
 
-                <p class="small-label">
-                    Queue Number
-                </p>
+                    <div class="ticket-live-indicator">
 
+                        <span class="ticket-live-dot"></span>
 
-                <div
-                    id="ticket-number"
-                    class="queue-number-display"
-                >
-                    C001
+                        LIVE
+
+                    </div>
+
                 </div>
 
+
+                <!-- ================================== -->
+                <!-- QUEUE NUMBER -->
+                <!-- ================================== -->
+
+                <div class="queue-number-area">
+
+                    <p class="small-label">
+                        Your Queue Number
+                    </p>
+
+
+                    <div
+                        id="ticket-number"
+                        class="queue-number-display"
+                    >
+                        C001
+                    </div>
+
+
+                    <p class="queue-number-help">
+                        Keep this page open while you wait.
+                    </p>
+
+                </div>
+
+
+                <!-- ================================== -->
+                <!-- STATUS -->
+                <!-- ================================== -->
 
                 <div class="ticket-grid">
 
+
                     <div class="ticket-stat">
 
-                        <span>
-                            Status
-                        </span>
+                        <div class="ticket-stat-icon">
+                            ●
+                        </div>
 
-                        <strong
-                            id="ticket-status"
-                        >
-                            Waiting
-                        </strong>
+
+                        <div>
+
+                            <span>
+                                Current Status
+                            </span>
+
+                            <strong id="ticket-status">
+                                WAITING
+                            </strong>
+
+                        </div>
 
                     </div>
 
 
-                    <div class="ticket-stat">
+                    <div
+                        id="queue-position-card"
+                        class="ticket-stat"
+                    >
 
-                        <span>
-                            People Before You
-                        </span>
+                        <div class="ticket-stat-icon">
+                            #
+                        </div>
 
-                        <strong
-                            id="people-before"
-                        >
-                            0
-                        </strong>
+
+                        <div>
+
+                            <span id="queue-position-label">
+                                People Before You
+                            </span>
+
+                            <strong id="people-before">
+                                -
+                            </strong>
+
+                        </div>
 
                     </div>
 
                 </div>
 
+
+                <!-- ================================== -->
+                <!-- ESTIMATED WAIT -->
+                <!-- ================================== -->
+
+                <div
+                    id="estimated-wait-panel"
+                    class="estimated-wait-panel"
+                    style="display: none;"
+                >
+
+                    <div
+                        id="estimated-wait-icon"
+                        class="estimated-wait-icon"
+                    >
+                        ◷
+                    </div>
+
+
+                    <div class="estimated-wait-content">
+
+                        <span
+                            id="estimated-wait-label"
+                            class="estimated-wait-label"
+                        >
+                            Estimated Waiting Time
+                        </span>
+
+
+                        <strong id="estimated-wait-time">
+                            About 5 minutes
+                        </strong>
+
+
+                        <p id="estimated-wait-description">
+                            Estimate based on the current queue.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================== -->
+                <!-- YOU ARE NEXT -->
+                <!-- ================================== -->
+
+                <div
+                    id="next-patient-panel"
+                    class="next-patient-panel"
+                    style="display: none;"
+                >
+
+                    <div class="next-patient-icon">
+                        ✓
+                    </div>
+
+
+                    <div>
+
+                        <span class="next-patient-label">
+                            QUEUE UPDATE
+                        </span>
+
+
+                        <strong>
+                            You're Next!
+                        </strong>
+
+
+                        <p id="next-patient-message">
+                            Please stay nearby.
+                            You will be called when a room
+                            becomes available.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================== -->
+                <!-- PATIENT CALLED -->
+                <!-- ================================== -->
 
                 <div
                     id="room-message"
@@ -170,17 +617,29 @@
                     style="display: none;"
                 >
 
-                    <div class="called-icon">
-                        ✓
+                    <div class="called-pulse">
+
+                        <div class="called-icon">
+                            ✓
+                        </div>
+
                     </div>
+
+
+                    <span class="called-label">
+                        PLEASE PROCEED
+                    </span>
+
 
                     <h2>
                         Your Number Has Been Called
                     </h2>
 
+
                     <p>
                         Please proceed to
                     </p>
+
 
                     <div
                         id="assigned-room"
@@ -189,43 +648,249 @@
                         Room 1
                     </div>
 
+
+                    <p class="called-help">
+                        Please show your queue number
+                        when entering the room.
+                    </p>
+
                 </div>
 
 
-                <button
-                    id="enable-sound-button"
-                    class="button secondary-button"
+                <!-- ================================== -->
+                <!-- COMPLETED -->
+                <!-- ================================== -->
+
+                <div
+                    id="completed-panel"
+                    class="completed-panel"
+                    style="display: none;"
                 >
-                    🔔 Enable Sound & Notifications
-                </button>
+
+                    <div class="completed-icon">
+                        ✓
+                    </div>
 
 
-                <button
-                    id="new-queue-button"
-                    class="button"
-                >
-                    Take New Queue Number
-                </button>
+                    <div>
+
+                        <span class="completed-label">
+                            COMPLETED
+                        </span>
+
+
+                        <strong>
+                            Visit Completed
+                        </strong>
+
+
+                        <p>
+                            Thank you for using
+                            <span id="completed-system-name">
+                                MediQueue
+                            </span>.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================== -->
+                <!-- PATIENT ACTIONS -->
+                <!-- ================================== -->
+
+                <div class="patient-ticket-actions">
+
+
+                    <button
+                        id="enable-sound-button"
+                        type="button"
+                        class="button secondary-button notification-button"
+                    >
+
+                        <span class="button-icon">
+                            🔔
+                        </span>
+
+                        <span>
+                            Enable Sound & Notifications
+                        </span>
+
+                    </button>
+
+
+                    <button
+                        id="new-queue-button"
+                        type="button"
+                        class="button new-queue-button"
+                    >
+
+                        <span>
+                            Take New Queue Number
+                        </span>
+
+                        <span class="button-arrow">
+                            →
+                        </span>
+
+                    </button>
+
+
+                </div>
+
+
+                <!-- ================================== -->
+                <!-- PATIENT REMINDER -->
+                <!-- ================================== -->
+
+                <div class="patient-reminder">
+
+                    <span class="patient-reminder-icon">
+                        i
+                    </span>
+
+
+                    <p>
+                        Please remain in the waiting area
+                        and monitor this page for live
+                        queue updates.
+                    </p>
+
+                </div>
+
 
             </section>
 
         </main>
 
 
-        <footer class="patient-footer">
+        <!-- ========================================== -->
+        <!-- FOOTER -->
+        <!-- ========================================== -->
 
-            <p>
-                MediQueue • Real-Time Hospital Queue
+        <footer
+            id="patient-footer"
+            class="patient-footer"
+        >
+
+            <div class="patient-footer-brand">
+
+                <div class="footer-website-logo-wrapper">
+
+    <!-- DEFAULT WEBSITE BRAND MARK -->
+
+    <div
+        id="footer-default-logo"
+        class="footer-medical-icon"
+    >
+        +
+    </div>
+
+
+    <!-- CUSTOM WEBSITE LOGO -->
+
+    <img
+        id="footer-custom-logo"
+        class="footer-custom-website-logo"
+        alt="MediQueue Logo"
+        style="display: none;"
+    >
+
+</div>
+
+
+                <div>
+
+                    <strong id="patient-footer-name">
+                        MediQueue
+                    </strong>
+
+                    <span>
+                        Real-Time Hospital Queue
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <p class="patient-footer-status">
+                Designed for a faster and
+                easier patient experience.
             </p>
 
         </footer>
 
+
     </div>
 
+</div>
 
-    <script src="/socket.io/socket.io.js"></script>
 
-    <script src="patient.js"></script>
+<!-- ================================================== -->
+<!-- CALL NOTIFICATION OVERLAY -->
+<!-- ================================================== -->
+
+<div
+    id="patient-call-overlay"
+    class="patient-call-overlay"
+    style="display: none;"
+>
+
+    <div class="patient-call-overlay-card">
+
+        <div class="patient-call-overlay-icon">
+            ✓
+        </div>
+
+
+        <span>
+            YOUR NUMBER HAS BEEN CALLED
+        </span>
+
+
+        <strong id="patient-call-overlay-number">
+            C001
+        </strong>
+
+
+        <p>
+            Please proceed to
+        </p>
+
+
+        <div id="patient-call-overlay-room">
+            Room 1
+        </div>
+
+
+        <button
+            id="patient-call-overlay-close"
+            type="button"
+            class="button"
+        >
+            Got It
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ================================================== -->
+<!-- SOCKET.IO -->
+<!-- ================================================== -->
+
+<script src="/socket.io/socket.io.js"></script>
+
+
+<!-- ================================================== -->
+<!-- PATIENT JAVASCRIPT -->
+<!-- ================================================== -->
+
+<script src="patient.js"></script>
+
 
 </body>
 

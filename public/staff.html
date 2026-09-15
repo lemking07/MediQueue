@@ -2,277 +2,3104 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>
-        MediQueue - Staff Dashboard
-    </title>
+    <title>MediQueue - Staff Dashboard</title>
 
     <link
         rel="stylesheet"
         href="style.css"
     >
-
 </head>
 
 
-<body>
+<body class="staff-app-body">
 
-    <div class="staff-layout">
 
-        <!-- ========================================= -->
-        <!-- HEADER -->
-        <!-- ========================================= -->
+<!-- =====================================================
+     SIDEBAR
+     ===================================================== -->
 
-        <header class="staff-header">
+<aside
+    id="staff-sidebar"
+    class="staff-sidebar"
+>
 
-            <div class="staff-brand">
+    <div class="sidebar-brand">
 
-                <div class="brand-icon">
-                    +
+        <div class="sidebar-logo">
+
+    <!-- Default MediQueue + logo -->
+    <div
+        id="sidebar-logo-fallback"
+        class="sidebar-logo-fallback"
+    >
+        +
+    </div>
+
+    <!-- Global Website Logo -->
+    <img
+        id="sidebar-custom-logo"
+        class="sidebar-custom-logo"
+        alt="MediQueue Logo"
+        style="display:none;"
+    >
+
+</div>
+
+        <div class="sidebar-brand-text">
+            <strong id="sidebar-system-name">
+                MediQueue
+            </strong>
+
+            <span>
+                Staff Control
+            </span>
+        </div>
+
+        <button
+            id="sidebar-close"
+            class="sidebar-close"
+            type="button"
+            aria-label="Close menu"
+        >
+            ×
+        </button>
+
+    </div>
+
+
+    <nav class="sidebar-navigation">
+
+        <span class="sidebar-section-label">
+            MAIN
+        </span>
+
+
+        <button
+            type="button"
+            class="sidebar-nav-item active"
+            data-open-view="staff-home-view"
+        >
+
+            <span class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 11.5 12 4l9 7.5v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8z"/>
+                </svg>
+            </span>
+
+            <span class="sidebar-nav-text">
+                <strong>Dashboard</strong>
+                <small>Overview & status</small>
+            </span>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="sidebar-nav-item"
+            data-open-view="portal-control-view"
+        >
+
+            <span class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-6l-2 3-2-3H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm4 5v2h3v3h2v-3h3V9h-3V6h-2v3H8z"/>
+                </svg>
+            </span>
+
+            <span class="sidebar-nav-text">
+                <strong>Patient Portal</strong>
+                <small>Live queue control</small>
+            </span>
+
+            <span
+                id="sidebar-waiting-badge"
+                class="sidebar-count-badge"
+            >
+                0
+            </span>
+
+        </button>
+
+
+        <button
+            type="button"
+            class="sidebar-nav-item"
+            data-open-view="patient-management-view"
+        >
+
+            <span class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2a2 2 0 0 1 2 2v1.1a7.9 7.9 0 0 1 1.7.7l.8-.8a2 2 0 1 1 2.8 2.8l-.8.8c.3.5.5 1.1.7 1.7H20a2 2 0 1 1 0 4h-1.1a7.9 7.9 0 0 1-.7 1.7l.8.8a2 2 0 0 1-2.8 2.8l-.8-.8a7.9 7.9 0 0 1-1.7.7V20a2 2 0 1 1-4 0v-1.1a7.9 7.9 0 0 1-1.7-.7l-.8.8a2 2 0 0 1-2.8-2.8l.8-.8a7.9 7.9 0 0 1-.7-1.7H4a2 2 0 1 1 0-4h1.1a7.9 7.9 0 0 1 .7-1.7L5 7.2A2 2 0 0 1 7.8 4.4l.8.8a7.9 7.9 0 0 1 1.7-.7V4a2 2 0 0 1 2-2zm0 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                </svg>
+            </span>
+
+            <span class="sidebar-nav-text">
+                <strong>Management</strong>
+                <small>Departments & rooms</small>
+            </span>
+
+        </button>
+
+<!-- =====================================================
+     LOGO CUSTOMIZE
+     ===================================================== -->
+
+<button
+    type="button"
+    class="sidebar-nav-item"
+    data-open-view="logo-customize-view"
+>
+
+    <span class="sidebar-nav-icon">
+        <svg viewBox="0 0 24 24">
+            <rect
+                x="3"
+                y="4"
+                width="18"
+                height="16"
+                rx="3"
+            />
+            <circle
+                cx="8.5"
+                cy="9"
+                r="1.5"
+            />
+            <path
+                d="m5 17 4.5-4.5 3 3 2-2 4.5 3.5"
+            />
+        </svg>
+    </span>
+
+    <span class="sidebar-nav-text">
+        <strong>
+            Logo Customize
+        </strong>
+
+        <small>
+            Department logos
+        </small>
+    </span>
+
+</button>
+        <span class="sidebar-section-label second-label">
+            SYSTEM
+        </span>
+<!-- =====================================================
+     WEBSITE SETTINGS
+     ===================================================== -->
+
+<button
+    type="button"
+    class="sidebar-nav-item"
+    data-open-view="website-settings-view"
+>
+
+    <span class="sidebar-nav-icon">
+
+        <svg viewBox="0 0 24 24">
+
+            <circle
+                cx="12"
+                cy="12"
+                r="3"
+            />
+
+            <path
+                d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.5 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.14.36.36.7.6 1 .28.3.67.4 1.1.4H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51.6z"
+            />
+
+        </svg>
+
+    </span>
+
+
+    <span class="sidebar-nav-text">
+
+        <strong>
+            Website Settings
+        </strong>
+
+        <small>
+            Logo & global settings
+        </small>
+
+    </span>
+
+</button>
+
+        <button
+            type="button"
+            class="sidebar-nav-item"
+            data-open-view="customization-view"
+        >
+
+            <span class="sidebar-nav-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 3a9 9 0 1 0 9 9c0-1.1-.9-2-2-2h-1.2a2 2 0 0 1-1.7-3l.6-1A2 2 0 0 0 15 3.1 9 9 0 0 0 12 3zm-4 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm-5 8a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm6 3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+                </svg>
+            </span>
+
+            <span class="sidebar-nav-text">
+                <strong>Customization</strong>
+                <small>Portal designer</small>
+            </span>
+
+        </button>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <div class="sidebar-system-status">
+
+            <span class="sidebar-status-dot"></span>
+
+            <div>
+                <strong>System Online</strong>
+                <small>Real-time connection</small>
+            </div>
+
+        </div>
+
+
+        <a
+            href="/logout.html"
+            class="sidebar-logout"
+        >
+
+            <svg viewBox="0 0 24 24">
+                <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v-2H5V6h5V4zm5.6 3.6L14.2 9l2 2H9v2h7.2l-2 2 1.4 1.4L20 12l-4.4-4.4z"/>
+            </svg>
+
+            Logout
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+<!-- MOBILE MENU -->
+
+<button
+    id="mobile-sidebar-button"
+    class="mobile-sidebar-button"
+    type="button"
+    aria-label="Open staff menu"
+>
+    <span></span>
+    <span></span>
+    <span></span>
+</button>
+
+
+<div
+    id="sidebar-overlay"
+    class="sidebar-overlay"
+></div>
+
+
+
+<!-- =====================================================
+     MAIN APP
+     ===================================================== -->
+
+<div class="staff-app">
+
+
+<!-- =====================================================
+     HEADER
+     ===================================================== -->
+
+<header class="staff-topbar">
+
+    <div
+    id="staff-brand-home"
+    class="staff-brand-area"
+    role="button"
+    tabindex="0"
+    title="Refresh Staff Dashboard"
+>
+
+        <div
+            id="dashboard-logo-fallback"
+            class="staff-brand-logo"
+        >
+            +
+        </div>
+
+        <img
+            id="dashboard-custom-logo"
+            class="staff-custom-logo"
+            alt="Hospital Logo"
+            style="display:none;"
+        >
+
+        <div class="staff-brand-text">
+
+            <div class="staff-brand-title">
+
+                <h1 id="staff-system-name">
+                    MediQueue
+                </h1>
+
+                <span>
+                    Staff Dashboard
+                </span>
+
+            </div>
+
+            <p id="staff-hospital-subtitle">
+                Hospital Queue Management System
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="staff-topbar-right">
+
+        <div
+            id="staff-connection"
+            class="connection-badge offline"
+        >
+            ● Connecting
+        </div>
+
+        <a
+            href="/logout.html"
+            class="staff-logout-button"
+        >
+            Logout
+        </a>
+
+    </div>
+
+</header>
+
+
+
+<!-- =====================================================
+     DASHBOARD HOME
+     ===================================================== -->
+
+<main
+    id="staff-home-view"
+    class="staff-view active"
+>
+
+    <section class="staff-home-hero">
+
+
+        <div class="staff-clock-card">
+
+            <div class="clock-top-row">
+
+                <div class="clock-icon">
+                    ◷
+                </div>
+
+                <span>
+                    LIVE TIME
+                </span>
+
+            </div>
+
+            <div
+                id="live-time"
+                class="staff-live-time"
+            >
+                --:--:--
+            </div>
+
+            <div
+                id="live-date"
+                class="staff-live-date"
+            >
+                Loading date...
+            </div>
+
+        </div>
+
+
+        <div class="staff-welcome-area">
+
+            <span class="section-kicker">
+                STAFF CONTROL CENTER
+            </span>
+
+            <h2>
+                Welcome to
+                <span id="staff-home-system-name">
+                    MediQueue
+                </span>
+            </h2>
+
+            <p>
+                Manage live patient queues,
+                departments, rooms and portal design
+                from one dashboard.
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <section class="staff-home-navigation">
+
+
+        <button
+            type="button"
+            class="staff-home-card primary-home-card"
+            data-open-view="portal-control-view"
+        >
+
+            <div class="home-card-icon">
+                <span>+</span>
+            </div>
+
+            <div class="home-card-content">
+
+                <span class="home-card-kicker">
+                    LIVE OPERATIONS
+                </span>
+
+                <h3>
+                    Patient Portal
+                </h3>
+
+                <p>
+                    Control live queue numbers,
+                    waiting patients and hospital rooms.
+                </p>
+
+                <div class="home-card-features">
+                    <span>Queue Control</span>
+                    <span>Room Control</span>
+                    <span>Call Patients</span>
+                </div>
+
+            </div>
+
+            <div class="home-card-arrow">
+                →
+            </div>
+
+        </button>
+
+
+
+        <button
+            type="button"
+            class="staff-home-card"
+            data-open-view="patient-management-view"
+        >
+
+            <div class="home-card-icon">
+                ⚙
+            </div>
+
+            <div class="home-card-content">
+
+                <span class="home-card-kicker">
+                    MANAGEMENT
+                </span>
+
+                <h3>
+                    Patient Portal Management
+                </h3>
+
+                <p>
+                    Configure departments,
+                    rooms, queue prefixes and
+                    estimated waiting times.
+                </p>
+
+                <div class="home-card-features">
+                    <span>Departments</span>
+                    <span>Rooms</span>
+                    <span>Waiting Time</span>
+                </div>
+
+            </div>
+
+            <div class="home-card-arrow">
+                →
+            </div>
+
+        </button>
+
+    </section>
+
+
+
+    <section class="staff-home-overview">
+
+        <div class="home-overview-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    LIVE OVERVIEW
+                </span>
+
+                <h3>
+                    Hospital Queue Status
+                </h3>
+
+            </div>
+
+            <span class="overview-live-text">
+                ● Real-Time
+            </span>
+
+        </div>
+
+
+        <div class="home-summary-grid">
+
+            <div class="home-summary-card">
+                <span>Departments</span>
+                <strong id="summary-departments">0</strong>
+                <small>Configured</small>
+            </div>
+
+            <div class="home-summary-card">
+                <span>Waiting</span>
+                <strong id="summary-waiting">0</strong>
+                <small>Patients</small>
+            </div>
+
+            <div class="home-summary-card">
+                <span>Busy Rooms</span>
+                <strong id="summary-busy">0</strong>
+                <small>Serving</small>
+            </div>
+
+            <div class="home-summary-card">
+                <span>Available Rooms</span>
+                <strong id="summary-available">0</strong>
+                <small>Ready</small>
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <button
+        type="button"
+        class="customization-launcher"
+        data-open-view="customization-view"
+    >
+
+        <div class="customization-launcher-icon">
+            ✦
+        </div>
+
+        <div>
+            <span>CUSTOMIZATION</span>
+            <strong>Dashboard / Portal</strong>
+        </div>
+
+        <div class="customization-arrow">
+            →
+        </div>
+
+    </button>
+
+</main>
+
+
+
+<!-- =====================================================
+     PATIENT PORTAL CONTROL
+     ===================================================== -->
+
+<main
+    id="portal-control-view"
+    class="staff-view"
+>
+
+    <div class="staff-subpage-header">
+
+        <button
+            type="button"
+            class="back-home-button"
+            data-open-view="staff-home-view"
+        >
+            ← Dashboard
+        </button>
+
+        <div>
+
+            <span class="section-kicker">
+                LIVE OPERATIONS
+            </span>
+
+            <h2>
+                Patient Portal Control
+            </h2>
+
+            <p>
+                Manage active queues,
+                waiting patients and rooms in real time.
+            </p>
+
+        </div>
+
+    </div>
+
+
+
+    <section class="control-summary-grid">
+
+        <div class="control-summary-card">
+            <span>Total Waiting</span>
+            <strong id="control-total-waiting">0</strong>
+        </div>
+
+        <div class="control-summary-card">
+            <span>Busy Rooms</span>
+            <strong id="control-busy-rooms">0</strong>
+        </div>
+
+        <div class="control-summary-card">
+            <span>Available Rooms</span>
+            <strong id="control-available-rooms">0</strong>
+        </div>
+
+        <div class="control-summary-card">
+            <span>Open Departments</span>
+            <strong id="control-open-departments">0</strong>
+        </div>
+
+    </section>
+
+
+
+    <section class="staff-section-card">
+
+        <div class="staff-section-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    LIVE QUEUE
+                </span>
+
+                <h3>
+                    Department Operations
+                </h3>
+
+                <p>
+                    Call the next patient,
+                    recall a number, assign rooms
+                    and complete visits.
+                </p>
+
+            </div>
+
+            <span class="live-operation-indicator">
+                ● LIVE
+            </span>
+
+        </div>
+
+
+        <div
+            id="portal-control-departments"
+            class="portal-control-departments"
+        >
+
+            <div class="empty-state">
+                Loading departments...
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+
+<!-- =====================================================
+     MANAGEMENT
+     ===================================================== -->
+
+<main
+    id="patient-management-view"
+    class="staff-view"
+>
+
+    <div class="staff-subpage-header">
+
+        <button
+            type="button"
+            class="back-home-button"
+            data-open-view="staff-home-view"
+        >
+            ← Dashboard
+        </button>
+
+        <div>
+
+            <span class="section-kicker">
+                SYSTEM MANAGEMENT
+            </span>
+
+            <h2>
+                Patient Portal Management
+            </h2>
+
+            <p>
+                Configure departments,
+                rooms, queue settings and
+                estimated waiting time.
+            </p>
+
+        </div>
+
+    </div>
+
+
+
+    <section class="staff-section-card">
+
+        <div class="staff-section-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    DEPARTMENTS
+                </span>
+
+                <h3>
+                    Add New Department
+                </h3>
+
+                <p>
+                    Create a department and configure
+                    its queue prefix and service time.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <form
+            id="add-department-form"
+            class="new-management-form"
+        >
+
+            <div class="form-field">
+
+                <label for="new-department-name">
+                    Department Name
+                </label>
+
+                <input
+                    id="new-department-name"
+                    type="text"
+                    placeholder="Example: Cardiology"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label for="new-department-prefix">
+                    Queue Prefix
+                </label>
+
+                <input
+                    id="new-department-prefix"
+                    type="text"
+                    maxlength="4"
+                    placeholder="C"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label for="new-department-minutes">
+                    Time Per Patient
+                </label>
+
+                <div class="input-with-unit">
+
+                    <input
+                        id="new-department-minutes"
+                        type="number"
+                        min="1"
+                        max="240"
+                        value="5"
+                        required
+                    >
+
+                    <span>
+                        minutes
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="button management-submit-button"
+            >
+                + Add Department
+            </button>
+
+        </form>
+
+    </section>
+
+
+
+    <section class="staff-section-card">
+
+        <div class="staff-section-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    CONFIGURATION
+                </span>
+
+                <h3>
+                    Departments & Rooms
+                </h3>
+
+                <p>
+                    Rename departments, change prefixes,
+                    edit waiting time, manage rooms
+                    and reset queues.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="departments-container"
+            class="department-admin-grid"
+        >
+
+            <div class="empty-state">
+                Loading departments...
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+<!-- =====================================================
+     LOGO CUSTOMIZE PAGE
+     ===================================================== -->
+
+<main
+    id="logo-customize-view"
+    class="staff-view"
+>
+
+    <div class="staff-subpage-header">
+
+        <button
+            type="button"
+            class="back-home-button"
+            data-open-view="staff-home-view"
+        >
+            ← Dashboard
+        </button>
+
+        <div>
+
+            <span class="section-kicker">
+                DEPARTMENT BRANDING
+            </span>
+
+            <h2>
+                Logo Customize
+            </h2>
+
+            <p>
+                Upload and manage the logo shown
+                for each department on the Patient Portal.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- LOGO INFORMATION -->
+
+    <section class="staff-section-card">
+
+        <div class="staff-section-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    PATIENT PORTAL ICONS
+                </span>
+
+                <h3>
+                    Department Logos
+                </h3>
+
+                <p>
+                    MediQueue automatically chooses a
+                    medical icon based on the department name.
+                    You can replace it with your own image.
+                </p>
+
+            </div>
+
+            <span class="designer-status-badge">
+                LIVE
+            </span>
+
+        </div>
+
+
+        <div class="department-logo-info-grid">
+
+            <div class="department-logo-info-item">
+
+                <div class="department-logo-info-icon">
+                    ✦
+                </div>
+
+                <div>
+                    <strong>
+                        Automatic Icon
+                    </strong>
+
+                    <span>
+                        MediQueue automatically selects
+                        a matching medical icon.
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="department-logo-info-item">
+
+                <div class="department-logo-info-icon">
+                    ▣
+                </div>
+
+                <div>
+                    <strong>
+                        Custom Logo
+                    </strong>
+
+                    <span>
+                        Upload your own PNG,
+                        JPG or WebP image.
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="department-logo-info-item">
+
+                <div class="department-logo-info-icon">
+                    ↻
+                </div>
+
+                <div>
+                    <strong>
+                        Reset to Automatic
+                    </strong>
+
+                    <span>
+                        Remove the uploaded image
+                        to restore the automatic icon.
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- DEPARTMENT LOGO MANAGER -->
+
+    <section class="staff-section-card">
+
+        <div class="staff-section-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    LOGO MANAGER
+                </span>
+
+                <h3>
+                    Customize Department Logos
+                </h3>
+
+                <p>
+                    Upload, change or remove the
+                    Patient Portal logo for each department.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="department-logo-customization-container"
+            class="department-logo-customization-grid"
+        >
+
+            <div class="empty-state">
+                Loading department logos...
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+<!-- =====================================================
+     WEBSITE SETTINGS PAGE
+     ===================================================== -->
+
+<main
+    id="website-settings-view"
+    class="staff-view"
+>
+
+    <!-- PAGE HEADER -->
+
+    <div class="staff-subpage-header">
+
+        <button
+            type="button"
+            class="back-home-button"
+            data-open-view="staff-home-view"
+        >
+            ← Dashboard
+        </button>
+
+
+        <div>
+
+            <span class="section-kicker">
+                GLOBAL WEBSITE SETTINGS
+            </span>
+
+            <h2>
+                Website Settings
+            </h2>
+
+            <p>
+                Manage the global MediQueue branding
+                and website-wide settings.
+            </p>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         WEBSITE BRANDING
+         ================================================= -->
+
+    <section class="staff-section-card">
+
+        <div class="staff-section-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    WEBSITE BRANDING
+                </span>
+
+                <h3>
+                    Website Logo
+                </h3>
+
+                <p>
+                    Upload one main logo to use across
+                    the MediQueue website and Staff Dashboard.
+                </p>
+
+            </div>
+
+
+            <span class="designer-status-badge">
+                GLOBAL
+            </span>
+
+        </div>
+
+
+
+        <!-- CURRENT LOGO -->
+
+        <div class="website-logo-settings-layout">
+
+
+            <div class="website-logo-preview-card">
+
+                <span class="website-setting-label">
+                    CURRENT WEBSITE LOGO
+                </span>
+
+
+                <div
+                    id="website-logo-preview-box"
+                    class="website-logo-preview-box"
+                >
+
+                    <!-- DEFAULT FALLBACK -->
+
+                    <div
+                        id="website-logo-default-preview"
+                        class="website-logo-default-preview"
+                    >
+                        +
+                    </div>
+
+
+                    <!-- CUSTOM LOGO -->
+
+                    <img
+                        id="website-logo-preview"
+                        class="website-logo-preview-image"
+                        alt="MediQueue Website Logo"
+                        style="display:none;"
+                    >
+
+                </div>
+
+
+                <strong
+                    id="website-logo-status"
+                    class="website-logo-status"
+                >
+                    Default MediQueue Logo
+                </strong>
+
+
+                <span class="website-logo-help">
+                    This logo will be used throughout
+                    the MediQueue website.
+                </span>
+
+            </div>
+
+
+
+            <!-- LOGO CONTROLS -->
+
+            <div class="website-logo-controls">
+
+                <div class="website-setting-block">
+
+                    <span class="website-setting-number">
+                        01
+                    </span>
+
+
+                    <div class="website-setting-content">
+
+                        <strong>
+                            Upload Website Logo
+                        </strong>
+
+                        <p>
+                            Upload a PNG, JPG or WebP image.
+                            Transparent PNG is recommended.
+                            Maximum size: 3 MB.
+                        </p>
+
+
+                        <input
+                            id="website-logo-input"
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            hidden
+                        >
+
+
+                        <button
+                            id="website-logo-upload-button"
+                            type="button"
+                            class="button"
+                        >
+                            Upload / Change Logo
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="website-setting-block">
+
+                    <span class="website-setting-number">
+                        02
+                    </span>
+
+
+                    <div class="website-setting-content">
+
+                        <strong>
+                            Reset Website Logo
+                        </strong>
+
+                        <p>
+                            Remove the uploaded logo and
+                            restore the default MediQueue branding.
+                        </p>
+
+
+                        <button
+                            id="website-logo-reset-button"
+                            type="button"
+                            class="button secondary-button"
+                        >
+                            Reset to Default
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         AUTOMATIC LOGO THEME
+         ================================================= -->
+
+    <section class="staff-section-card">
+
+        <div class="staff-section-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    SMART BRANDING
+                </span>
+
+                <h3>
+                    Automatic Theme From Logo
+                </h3>
+
+                <p>
+                    Automatically create a matching
+                    MediQueue color theme from your uploaded logo.
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="website-auto-theme-card">
+
+            <div class="website-auto-theme-information">
+
+                <div class="website-auto-theme-icon">
+                    ✦
                 </div>
 
 
                 <div>
 
-                    <h1>
-                        MediQueue
-                    </h1>
+                    <strong>
+                        Match Website Theme to Logo
+                    </strong>
 
                     <p>
-                        Staff Dashboard
+                        When enabled, MediQueue will analyze
+                        the uploaded logo and automatically
+                        choose matching primary and secondary
+                        branding colors.
                     </p>
 
+                    <span class="website-auto-theme-note">
+                        White and light backgrounds will remain
+                        readable while buttons, highlights,
+                        active navigation and branding colors adapt.
+                    </span>
+
                 </div>
 
             </div>
 
 
-            <div class="header-right">
 
-                <div class="clock-box">
+            <label class="website-theme-switch">
 
-                    <strong
-                        id="live-time"
-                    >
-                        --:--:--
+                <input
+                    id="website-auto-theme-toggle"
+                    type="checkbox"
+                >
+
+                <span class="website-theme-switch-slider"></span>
+
+            </label>
+
+        </div>
+
+
+
+        <!-- EXTRACTED COLORS -->
+
+        <div
+            id="website-theme-colors"
+            class="website-theme-colors"
+            style="display:none;"
+        >
+
+            <div class="website-theme-color-item">
+
+                <span
+                    id="website-primary-color-preview"
+                    class="website-theme-color-circle"
+                ></span>
+
+                <div>
+                    <small>Primary</small>
+
+                    <strong id="website-primary-color-value">
+                        #0F9D8A
                     </strong>
-
-                    <span
-                        id="live-date"
-                    >
-                        Loading...
-                    </span>
-
                 </div>
-
-
-                <div
-                    id="staff-connection"
-                    class="connection-badge offline"
-                >
-                    Connecting...
-                </div>
-
-
-                <a
-                    href="/logout.html"
-                    class="logout-button"
-                >
-                    Logout
-                </a>
 
             </div>
 
-        </header>
 
+            <div class="website-theme-color-item">
 
-        <main class="staff-main">
+                <span
+                    id="website-secondary-color-preview"
+                    class="website-theme-color-circle"
+                ></span>
 
-            <!-- ========================================= -->
-            <!-- SUMMARY -->
-            <!-- ========================================= -->
+                <div>
+                    <small>Secondary</small>
 
-            <section class="dashboard-summary">
-
-                <div class="summary-card">
-
-                    <span>
-                        Departments
-                    </span>
-
-                    <strong
-                        id="summary-departments"
-                    >
-                        0
+                    <strong id="website-secondary-color-value">
+                        #17324D
                     </strong>
-
                 </div>
 
+            </div>
 
-                <div class="summary-card">
+        </div>
 
-                    <span>
-                        Waiting
-                    </span>
-
-                    <strong
-                        id="summary-waiting"
-                    >
-                        0
-                    </strong>
-
-                </div>
+    </section>
 
 
-                <div class="summary-card">
 
-                    <span>
-                        Busy Rooms
-                    </span>
+    <!-- =================================================
+         FUTURE WEBSITE SETTINGS
+         ================================================= -->
 
-                    <strong
-                        id="summary-busy"
-                    >
-                        0
-                    </strong>
+    <section class="staff-section-card website-settings-future-card">
 
-                </div>
+        <div class="staff-section-heading">
 
+            <div>
 
-                <div class="summary-card">
+                <span class="section-kicker">
+                    WEBSITE SETTINGS
+                </span>
 
-                    <span>
-                        Available Rooms
-                    </span>
+                <h3>
+                    More Settings
+                </h3>
 
-                    <strong
-                        id="summary-available"
-                    >
-                        0
-                    </strong>
+                <p>
+                    This page is ready for additional
+                    website settings in future MediQueue upgrades.
+                </p>
 
-                </div>
+            </div>
 
-            </section>
+        </div>
 
 
-            <!-- ========================================= -->
-            <!-- ADD DEPARTMENT -->
-            <!-- ========================================= -->
+        <div class="website-future-settings">
 
-            <section class="admin-panel">
+            <span>
+                Website Name
+            </span>
 
-                <div class="panel-heading">
+            <span>
+                Browser Icon
+            </span>
 
-                    <div>
+            <span>
+                Hospital Information
+            </span>
 
-                        <span class="section-kicker">
-                            CUSTOMIZATION
-                        </span>
+            <span>
+                Footer
+            </span>
 
-                        <h2>
-                            Add Department
-                        </h2>
+            <span>
+                Contact Information
+            </span>
 
-                    </div>
+        </div>
 
-                </div>
+    </section>
 
+</main>
+<!-- =====================================================
+     CUSTOMIZATION STUDIO
+     ===================================================== -->
 
-                <form
-                    id="add-department-form"
-                    class="inline-form"
-                >
+<main
+    id="customization-view"
+    class="staff-view"
+>
 
-                    <input
-                        id="new-department-name"
-                        type="text"
-                        placeholder="Department name"
-                        required
-                    >
+    <div class="staff-subpage-header">
 
+        <button
+            type="button"
+            class="back-home-button"
+            data-open-view="staff-home-view"
+        >
+            ← Dashboard
+        </button>
 
-                    <input
-                        id="new-department-prefix"
-                        type="text"
-                        placeholder="Prefix e.g. C"
-                        maxlength="4"
-                        required
-                    >
+        <div>
 
+            <span class="section-kicker">
+                APPEARANCE & EXPERIENCE
+            </span>
 
-                    <button
-                        type="submit"
-                        class="button compact-button"
-                    >
-                        + Add Department
-                    </button>
+            <h2>
+                Customization Studio
+            </h2>
 
-                </form>
+            <p>
+                Design the Patient Portal and
+                customize the Staff Dashboard.
+            </p>
 
-            </section>
-
-
-            <!-- ========================================= -->
-            <!-- DEPARTMENT LIST -->
-            <!-- ========================================= -->
-
-            <section>
-
-                <div class="dashboard-section-heading">
-
-                    <div>
-
-                        <span class="section-kicker">
-                            LIVE QUEUE CONTROL
-                        </span>
-
-                        <h2>
-                            Departments
-                        </h2>
-
-                    </div>
-
-
-                    <span class="live-hint">
-                        Updates automatically
-                    </span>
-
-                </div>
-
-
-                <div
-                    id="departments-container"
-                    class="department-admin-grid"
-                >
-                </div>
-
-            </section>
-
-        </main>
+        </div>
 
     </div>
 
 
-    <!-- TOAST -->
+
+    <div class="customization-studio-grid">
+
+
+<!-- =====================================================
+     ADVANCED PATIENT PORTAL DESIGNER
+     ===================================================== -->
+
+<section
+    class="staff-section-card customization-studio-card portal-designer-card"
+>
+
+    <div class="customization-card-icon">
+        ✦
+    </div>
+
+
+    <div class="staff-section-heading">
+
+        <div>
+
+            <span class="section-kicker">
+                PATIENT PORTAL DESIGNER
+            </span>
+
+            <h3>
+                Design Patient Portal
+            </h3>
+
+            <p>
+                Customize branding, colors,
+                layout, sections, animations
+                and the patient experience.
+            </p>
+
+        </div>
+
+        <span class="designer-status-badge">
+            LIVE DESIGN
+        </span>
+
+    </div>
+
+
+
+    <form id="portal-settings-form">
+
+
+<!-- ================= BRANDING ================= -->
+
+<div class="portal-designer-group">
+
+    <div class="portal-designer-group-heading">
+
+        <span class="designer-group-number">
+            01
+        </span>
+
+        <div>
+            <h4>Branding</h4>
+            <p>
+                Hospital name, welcome message,
+                logo, banner and announcements.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="designer-two-column">
+
+        <div class="form-field">
+
+            <label for="portal-system-name">
+                System / Hospital Name
+            </label>
+
+            <input
+                id="portal-system-name"
+                type="text"
+                value="MediQueue"
+                maxlength="80"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-field">
+
+            <label for="portal-welcome-text">
+                Welcome Message
+            </label>
+
+            <input
+                id="portal-welcome-text"
+                type="text"
+                value="Smart Hospital Queue Management System"
+                maxlength="250"
+            >
+
+        </div>
+
+    </div>
+
+
+    <div class="form-field">
+
+        <label for="portal-announcement">
+            Patient Announcement
+        </label>
+
+        <textarea
+            id="portal-announcement"
+            rows="4"
+            maxlength="500"
+            placeholder="Example: Cardiology is operating until 5:00 PM today."
+        ></textarea>
+
+    </div>
+
+
+    <div class="designer-upload-grid">
+
+
+        <div class="designer-upload-card">
+
+            <div class="designer-upload-icon">
+                +
+            </div>
+
+            <div>
+                <strong>Portal Logo</strong>
+                <p>
+                    Upload your hospital
+                    or MediQueue logo.
+                </p>
+            </div>
+
+            <input
+                id="portal-logo-input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+            >
+
+        </div>
+
+
+        <div class="designer-upload-card">
+
+            <div class="designer-upload-icon">
+                ▣
+            </div>
+
+            <div>
+                <strong>Portal Banner</strong>
+                <p>
+                    Optional wide image for
+                    the top of the portal.
+                </p>
+            </div>
+
+            <input
+                id="portal-banner-input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+            >
+
+        </div>
+
+    </div>
+
 
     <div
-        id="toast"
-        class="toast"
+        id="portal-logo-preview-container"
+        class="logo-preview-container"
+        style="display:none;"
     >
+
+        <div class="designer-image-preview">
+
+            <span>
+                Logo Preview
+            </span>
+
+            <img
+                id="portal-logo-preview"
+                alt="Portal Logo Preview"
+            >
+
+        </div>
+
+        <button
+            id="remove-logo-button"
+            type="button"
+            class="button danger-button compact-button"
+        >
+            Remove Logo
+        </button>
+
     </div>
 
 
-    <script src="/socket.io/socket.io.js"></script>
+    <div
+        id="portal-banner-preview-container"
+        class="logo-preview-container"
+        style="display:none;"
+    >
 
-    <script src="staff.js"></script>
+        <div class="designer-image-preview banner-preview">
+
+            <span>
+                Banner Preview
+            </span>
+
+            <img
+                id="portal-banner-preview"
+                alt="Portal Banner Preview"
+            >
+
+        </div>
+
+        <button
+            id="remove-banner-button"
+            type="button"
+            class="button danger-button compact-button"
+        >
+            Remove Banner
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= THEME ================= -->
+
+<div class="portal-designer-group">
+
+    <div class="portal-designer-group-heading">
+
+        <span class="designer-group-number">
+            02
+        </span>
+
+        <div>
+            <h4>Theme & Style</h4>
+            <p>
+                Change the overall visual
+                appearance of the portal.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="designer-three-column">
+
+
+        <div class="form-field">
+
+            <label for="portal-theme">
+                Portal Theme
+            </label>
+
+            <select id="portal-theme">
+                <option value="light">Light Medical</option>
+                <option value="dark">Dark Medical</option>
+                <option value="glass">Glass / Modern</option>
+            </select>
+
+        </div>
+
+
+        <div class="form-field">
+
+            <label for="portal-background-style">
+                Background Style
+            </label>
+
+            <select id="portal-background-style">
+                <option value="medical">Medical</option>
+                <option value="soft">Soft</option>
+                <option value="gradient">Gradient</option>
+                <option value="solid">Solid</option>
+            </select>
+
+        </div>
+
+
+        <div class="form-field">
+
+            <label for="portal-card-style">
+                Card Style
+            </label>
+
+            <select id="portal-card-style">
+                <option value="soft">Soft</option>
+                <option value="solid">Solid</option>
+                <option value="glass">Glass</option>
+                <option value="outline">Outline</option>
+            </select>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= COLORS ================= -->
+
+<div class="portal-designer-group">
+
+    <div class="portal-designer-group-heading">
+
+        <span class="designer-group-number">
+            03
+        </span>
+
+        <div>
+            <h4>Portal Colors</h4>
+            <p>
+                Build your own patient portal
+                color combination.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="designer-color-grid">
+
+
+        <div class="designer-color-control">
+
+            <label for="portal-primary-color">
+                Primary
+            </label>
+
+            <input
+                id="portal-primary-color"
+                type="color"
+                value="#0F9D8A"
+            >
+
+            <span id="primary-color-value">
+                #0F9D8A
+            </span>
+
+        </div>
+
+
+        <div class="designer-color-control">
+
+            <label for="portal-secondary-color">
+                Secondary
+            </label>
+
+            <input
+                id="portal-secondary-color"
+                type="color"
+                value="#17324D"
+            >
+
+            <span id="secondary-color-value">
+                #17324D
+            </span>
+
+        </div>
+
+
+        <div class="designer-color-control">
+
+            <label for="portal-background-color">
+                Background
+            </label>
+
+            <input
+                id="portal-background-color"
+                type="color"
+                value="#F4FBF9"
+            >
+
+            <span id="background-color-value">
+                #F4FBF9
+            </span>
+
+        </div>
+
+
+        <div class="designer-color-control">
+
+            <label for="portal-card-color">
+                Cards
+            </label>
+
+            <input
+                id="portal-card-color"
+                type="color"
+                value="#FFFFFF"
+            >
+
+            <span id="card-color-value">
+                #FFFFFF
+            </span>
+
+        </div>
+
+
+        <div class="designer-color-control">
+
+            <label for="portal-text-color">
+                Text
+            </label>
+
+            <input
+                id="portal-text-color"
+                type="color"
+                value="#17324D"
+            >
+
+            <span id="text-color-value">
+                #17324D
+            </span>
+
+        </div>
+
+
+        <div class="designer-color-control">
+
+            <label for="portal-button-text-color">
+                Button Text
+            </label>
+
+            <input
+                id="portal-button-text-color"
+                type="color"
+                value="#FFFFFF"
+            >
+
+            <span id="button-text-color-value">
+                #FFFFFF
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= LAYOUT ================= -->
+
+<div class="portal-designer-group">
+
+    <div class="portal-designer-group-heading">
+
+        <span class="designer-group-number">
+            04
+        </span>
+
+        <div>
+            <h4>Layout</h4>
+            <p>
+                Control how the patient
+                portal is arranged.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="designer-two-column">
+
+
+        <div class="form-field">
+
+            <label for="portal-width">
+                Portal Width
+            </label>
+
+            <select id="portal-width">
+                <option value="compact">Compact</option>
+                <option value="normal" selected>Normal</option>
+                <option value="wide">Wide</option>
+            </select>
+
+        </div>
+
+
+        <div class="form-field">
+
+            <label for="portal-department-layout">
+                Department Layout
+            </label>
+
+            <select id="portal-department-layout">
+                <option value="grid">Grid Cards</option>
+                <option value="list">List</option>
+                <option value="compact">Compact</option>
+            </select>
+
+        </div>
+
+
+        <div class="form-field">
+
+            <label for="portal-button-style">
+                Queue Button Style
+            </label>
+
+            <select id="portal-button-style">
+                <option value="rounded">Rounded</option>
+                <option value="soft">Soft</option>
+                <option value="square">Square</option>
+                <option value="pill">Pill</option>
+            </select>
+
+        </div>
+
+
+        <div class="form-field">
+
+            <label for="portal-queue-button-position">
+                Queue Button Position
+            </label>
+
+            <select id="portal-queue-button-position">
+                <option value="bottom">Bottom</option>
+                <option value="center">Center</option>
+                <option value="inside">Inside Department Card</option>
+                <option value="full">Full Width</option>
+            </select>
+
+        </div>
+
+
+        <div class="form-field">
+
+            <label for="portal-text-alignment">
+                Text Alignment
+            </label>
+
+            <select id="portal-text-alignment">
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+            </select>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= SECTION ORDER ================= -->
+
+<div class="portal-designer-group">
+
+    <div class="portal-designer-group-heading">
+
+        <span class="designer-group-number">
+            05
+        </span>
+
+        <div>
+            <h4>Move Portal Sections</h4>
+            <p>
+                Drag these blocks to change
+                the order patients see them.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div
+        id="portal-section-sorter"
+        class="portal-section-sorter"
+    >
+
+
+        <div
+            class="portal-sortable-item"
+            draggable="true"
+            data-section="welcome"
+        >
+
+            <span class="drag-handle">
+                ⋮⋮
+            </span>
+
+            <div>
+                <strong>Welcome</strong>
+                <small>
+                    Portal title and welcome message
+                </small>
+            </div>
+
+            <span class="sort-order-number">
+                1
+            </span>
+
+        </div>
+
+
+        <div
+            class="portal-sortable-item"
+            draggable="true"
+            data-section="announcement"
+        >
+
+            <span class="drag-handle">
+                ⋮⋮
+            </span>
+
+            <div>
+                <strong>Announcement</strong>
+                <small>
+                    Important patient information
+                </small>
+            </div>
+
+            <span class="sort-order-number">
+                2
+            </span>
+
+        </div>
+
+
+        <div
+            class="portal-sortable-item"
+            draggable="true"
+            data-section="departments"
+        >
+
+            <span class="drag-handle">
+                ⋮⋮
+            </span>
+
+            <div>
+                <strong>Departments</strong>
+                <small>
+                    Department selection cards
+                </small>
+            </div>
+
+            <span class="sort-order-number">
+                3
+            </span>
+
+        </div>
+
+
+        <div
+            class="portal-sortable-item"
+            draggable="true"
+            data-section="ticket"
+        >
+
+            <span class="drag-handle">
+                ⋮⋮
+            </span>
+
+            <div>
+                <strong>Patient Ticket</strong>
+                <small>
+                    Queue number and waiting status
+                </small>
+            </div>
+
+            <span class="sort-order-number">
+                4
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= VISIBILITY ================= -->
+
+<div class="portal-designer-group">
+
+    <div class="portal-designer-group-heading">
+
+        <span class="designer-group-number">
+            06
+        </span>
+
+        <div>
+            <h4>Show / Hide</h4>
+            <p>
+                Decide what information
+                patients can see.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="designer-toggle-grid">
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>Welcome Section</strong>
+                <span>Show the welcome message.</span>
+            </div>
+
+            <input
+                id="portal-show-welcome"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>Announcement</strong>
+                <span>Show patient announcements.</span>
+            </div>
+
+            <input
+                id="portal-show-announcement"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>Connection Status</strong>
+                <span>Show real-time connection.</span>
+            </div>
+
+            <input
+                id="portal-show-connection"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>People Before You</strong>
+                <span>Show waiting patient count.</span>
+            </div>
+
+            <input
+                id="portal-show-waiting"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>Estimated Wait</strong>
+                <span>Show estimated waiting time.</span>
+            </div>
+
+            <input
+                id="portal-show-estimated"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>Footer</strong>
+                <span>Show the patient portal footer.</span>
+            </div>
+
+            <input
+                id="portal-show-footer"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= ANIMATIONS ================= -->
+
+<div class="portal-designer-group">
+
+    <div class="portal-designer-group-heading">
+
+        <span class="designer-group-number">
+            07
+        </span>
+
+        <div>
+            <h4>Patient Animations</h4>
+            <p>
+                Control movement and visual
+                feedback on the portal.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="designer-toggle-grid">
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>Button Animation</strong>
+                <span>Animate patient buttons.</span>
+            </div>
+
+            <input
+                id="portal-button-animation"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>Card Animation</strong>
+                <span>Animate department cards.</span>
+            </div>
+
+            <input
+                id="portal-card-animation"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>Called Animation</strong>
+                <span>
+                    Highlight the ticket
+                    when a patient is called.
+                </span>
+            </div>
+
+            <input
+                id="portal-called-animation"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= PATIENT SOUNDS ================= -->
+
+<div class="portal-designer-group">
+
+    <div class="portal-designer-group-heading">
+
+        <span class="designer-group-number">
+            08
+        </span>
+
+        <div>
+            <h4>Patient Sounds</h4>
+            <p>
+                Configure queue call and
+                recall notifications.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="designer-toggle-grid">
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>Patient Call Sound</strong>
+                <span>
+                    Play sound when the
+                    patient is called.
+                </span>
+            </div>
+
+            <input
+                id="portal-patient-call-sound"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+
+        <label class="setting-toggle-row">
+
+            <div>
+                <strong>Recall Sound</strong>
+                <span>
+                    Play an alert when
+                    staff recalls a patient.
+                </span>
+            </div>
+
+            <input
+                id="portal-recall-sound"
+                type="checkbox"
+                checked
+            >
+
+        </label>
+
+    </div>
+
+
+    <div class="form-field">
+
+        <label for="portal-notification-sound">
+            Patient Notification Sound
+        </label>
+
+        <select id="portal-notification-sound">
+
+            <option value="medical">
+                Medical Chime
+            </option>
+
+            <option value="soft">
+                Soft Chime
+            </option>
+
+            <option value="digital">
+                Digital Alert
+            </option>
+
+        </select>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= PORTAL ACTIONS ================= -->
+
+<div class="portal-designer-actions">
+
+    <button
+        id="reset-portal-design-button"
+        type="button"
+        class="button secondary-button"
+    >
+        Reset Portal Design
+    </button>
+
+
+    <a
+        href="/patient.html"
+        target="_blank"
+        class="button secondary-button"
+    >
+        Open Patient Portal ↗
+    </a>
+
+
+    <button
+        type="submit"
+        class="button customization-save-button"
+    >
+        Save Patient Portal Design
+    </button>
+
+</div>
+
+
+</form>
+
+</section>
+
+
+
+<!-- =====================================================
+     STAFF DASHBOARD CUSTOMIZATION
+     ===================================================== -->
+
+<section
+    class="staff-section-card customization-studio-card"
+>
+
+    <div class="customization-card-icon">
+        ✦
+    </div>
+
+
+    <div class="staff-section-heading">
+
+        <div>
+
+            <span class="section-kicker">
+                STAFF DASHBOARD
+            </span>
+
+            <h3>
+                Dashboard Appearance
+            </h3>
+
+            <p>
+                Customize the staff dashboard
+                separately from the patient portal.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="form-field">
+
+        <label for="dashboard-theme">
+            Dashboard Theme
+        </label>
+
+        <select id="dashboard-theme">
+
+            <option value="light">
+                Light Medical
+            </option>
+
+            <option value="dark">
+                Dark Medical
+            </option>
+
+            <option value="glass">
+                Glass / Modern
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <div class="form-field">
+
+        <label for="dashboard-primary-color">
+            Dashboard Accent Color
+        </label>
+
+        <div class="color-control">
+
+            <input
+                id="dashboard-primary-color"
+                type="color"
+                value="#0F9D8A"
+            >
+
+            <span id="dashboard-primary-color-value">
+                #0F9D8A
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="form-field">
+
+        <label for="dashboard-background-color">
+            Dashboard Background
+        </label>
+
+        <div class="color-control">
+
+            <input
+                id="dashboard-background-color"
+                type="color"
+                value="#F3F8F8"
+            >
+
+            <span id="dashboard-background-color-value">
+                #F3F8F8
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="form-field">
+
+        <label for="dashboard-logo-input">
+            Dashboard Logo
+        </label>
+
+        <input
+            id="dashboard-logo-input"
+            type="file"
+            accept="image/*"
+        >
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     STAFF ANIMATION SETTINGS
+     ===================================================== -->
+
+<section
+    class="staff-section-card customization-studio-card"
+>
+
+    <div class="customization-card-icon">
+        ↗
+    </div>
+
+
+    <div class="staff-section-heading">
+
+        <div>
+
+            <span class="section-kicker">
+                INTERACTIONS
+            </span>
+
+            <h3>
+                Dashboard Buttons & Animations
+            </h3>
+
+            <p>
+                Control animation used on
+                the staff dashboard.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <label class="setting-toggle-row">
+
+        <div>
+            <strong>Button Animation</strong>
+            <span>
+                Animate dashboard buttons.
+            </span>
+        </div>
+
+        <input
+            id="button-animation-toggle"
+            type="checkbox"
+            checked
+        >
+
+    </label>
+
+
+    <label class="setting-toggle-row">
+
+        <div>
+            <strong>Card Animation</strong>
+            <span>
+                Animate dashboard cards.
+            </span>
+        </div>
+
+        <input
+            id="card-animation-toggle"
+            type="checkbox"
+            checked
+        >
+
+    </label>
+
+
+    <div class="form-field">
+
+        <label for="button-style">
+            Button Style
+        </label>
+
+        <select id="button-style">
+
+            <option value="rounded">
+                Rounded
+            </option>
+
+            <option value="soft">
+                Soft
+            </option>
+
+            <option value="square">
+                Square
+            </option>
+
+            <option value="pill">
+                Pill
+            </option>
+
+        </select>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     DASHBOARD SOUND SETTINGS
+     ===================================================== -->
+
+<section
+    class="staff-section-card customization-studio-card"
+>
+
+    <div class="customization-card-icon">
+        ♪
+    </div>
+
+
+    <div class="staff-section-heading">
+
+        <div>
+
+            <span class="section-kicker">
+                NOTIFICATIONS
+            </span>
+
+            <h3>
+                Dashboard Sound & Alerts
+            </h3>
+
+            <p>
+                Configure notification sounds
+                used by the staff interface.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <label class="setting-toggle-row">
+
+        <div>
+            <strong>Patient Call Sound</strong>
+            <span>
+                Play a dashboard alert
+                when calling patients.
+            </span>
+        </div>
+
+        <input
+            id="patient-call-sound-toggle"
+            type="checkbox"
+            checked
+        >
+
+    </label>
+
+
+    <label class="setting-toggle-row">
+
+        <div>
+            <strong>Recall Sound</strong>
+            <span>
+                Play a stronger dashboard
+                recall notification.
+            </span>
+        </div>
+
+        <input
+            id="recall-sound-toggle"
+            type="checkbox"
+            checked
+        >
+
+    </label>
+
+
+    <div class="form-field">
+
+        <label for="notification-sound-style">
+            Notification Sound Style
+        </label>
+
+        <select id="notification-sound-style">
+
+            <option value="medical">
+                Medical Chime
+            </option>
+
+            <option value="soft">
+                Soft Chime
+            </option>
+
+            <option value="digital">
+                Digital Alert
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <button
+        id="preview-notification-sound"
+        type="button"
+        class="button secondary-button"
+    >
+        ▶ Preview Sound
+    </button>
+
+</section>
+
+
+</div>
+
+
+
+<!-- DASHBOARD CUSTOMIZATION ACTIONS -->
+
+<div class="customization-bottom-actions">
+
+    <button
+        id="reset-customization-button"
+        type="button"
+        class="button secondary-button"
+    >
+        Reset Dashboard Appearance
+    </button>
+
+
+    <button
+        id="save-dashboard-customization"
+        type="button"
+        class="button"
+    >
+        Save Dashboard Customization
+    </button>
+
+</div>
+
+
+</main>
+
+
+
+<!-- =====================================================
+     EDIT DEPARTMENT MODAL
+     ===================================================== -->
+
+<div
+    id="department-edit-modal"
+    class="mediqueue-modal"
+    style="display:none;"
+>
+
+    <div class="mediqueue-modal-card">
+
+
+        <div class="modal-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    DEPARTMENT SETTINGS
+                </span>
+
+                <h2>
+                    Edit Department
+                </h2>
+
+            </div>
+
+
+            <button
+                id="close-department-modal"
+                type="button"
+                class="modal-close-button"
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="department-edit-form">
+
+
+            <input
+                id="edit-department-id"
+                type="hidden"
+            >
+
+
+            <div class="form-field">
+
+                <label for="edit-department-name">
+                    Department Name
+                </label>
+
+                <input
+                    id="edit-department-name"
+                    type="text"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label for="edit-department-prefix">
+                    Queue Prefix
+                </label>
+
+                <input
+                    id="edit-department-prefix"
+                    type="text"
+                    maxlength="4"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label for="edit-department-minutes">
+                    Estimated Time Per Patient
+                </label>
+
+                <div class="input-with-unit">
+
+                    <input
+                        id="edit-department-minutes"
+                        type="number"
+                        min="1"
+                        max="240"
+                        required
+                    >
+
+                    <span>
+                        minutes
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label for="edit-department-status">
+                    Department Status
+                </label>
+
+                <select id="edit-department-status">
+
+                    <option value="open">
+                        Open
+                    </option>
+
+                    <option value="closed">
+                        Closed
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    id="cancel-department-edit"
+                    type="button"
+                    class="button secondary-button"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="button"
+                >
+                    Save Department
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     TOAST
+     ===================================================== -->
+
+<div
+    id="toast"
+    class="toast"
+    aria-live="polite"
+></div>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     SCRIPTS
+     ===================================================== -->
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="staff.js"></script>
 
 </body>
 
