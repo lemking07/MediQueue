@@ -501,7 +501,7 @@ app.post(
                 .status(404)
                 .json({
                     error:
-                        "Department not found."
+                        "Department."
                 });
         }
 

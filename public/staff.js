@@ -1,1593 +1,1051 @@
-let hospitalData = {
+// ==========================================
+// MEDIQUEUE - STAFF DASHBOARD
+// ==========================================
+
+let latestData = {
     departments: []
 };
 
-const expandedDepartments =
-    new Set();
+// Socket.IO is optional here.
+// If it is loaded in staff.html, the dashboard becomes real-time.
+const socket =
+    typeof io !== "undefined"
+        ? io()
+        : null;
 
 
-// ======================================================
-// SOCKET.IO
-// ======================================================
+// ==========================================
+// STAFF FETCH
+// ==========================================
 
-const socket = io();
+async function staffFetch(url, options = {}) {
 
+    const response = await fetch(url, options);
 
-socket.on(
-    "connect",
-    () => {
+    if (response.status === 401) {
 
-        setConnectionStatus(
-            true
+        window.location.replace(
+            "/staff-login.html"
         );
 
-    }
-);
-
-
-socket.on(
-    "disconnect",
-    () => {
-
-        setConnectionStatus(
-            false
+        throw new Error(
+            "Staff login required"
         );
-
-    }
-);
-
-
-socket.on(
-    "queue:update",
-    data => {
-
-        hospitalData =
-            data;
-
-        renderDashboard();
-
-    }
-);
-
-
-// ======================================================
-// CONNECTION STATUS
-// ======================================================
-
-function setConnectionStatus(
-    connected
-) {
-
-    const badge =
-        document.getElementById(
-            "staff-connection"
-        );
-
-
-    if (!badge) {
-        return;
     }
 
-
-    if (connected) {
-
-        badge.textContent =
-            "● Live";
-
-        badge.className =
-            "connection-badge online";
-
-    } else {
-
-        badge.textContent =
-            "● Reconnecting";
-
-        badge.className =
-            "connection-badge offline";
-
-    }
+    return response;
 }
 
 
-// ======================================================
-// LIVE CLOCK
-// ======================================================
+// ==========================================
+// LOAD STAFF DASHBOARD
+// ==========================================
 
-function updateClock() {
-
-    const now =
-        new Date();
-
-
-    document.getElementById(
-        "live-time"
-    ).textContent =
-        now.toLocaleTimeString(
-            [],
-            {
-                hour:
-                    "2-digit",
-
-                minute:
-                    "2-digit",
-
-                second:
-                    "2-digit"
-            }
-        );
-
-
-    document.getElementById(
-        "live-date"
-    ).textContent =
-        now.toLocaleDateString(
-            [],
-            {
-                weekday:
-                    "long",
-
-                year:
-                    "numeric",
-
-                month:
-                    "long",
-
-                day:
-                    "numeric"
-            }
-        );
-}
-
-
-setInterval(
-    updateClock,
-    1000
-);
-
-
-updateClock();
-
-
-// ======================================================
-// INITIAL LOAD
-// ======================================================
-
-async function loadData() {
+async function loadStaffDashboard() {
 
     try {
 
         const response =
-            await fetch(
-                "/api/data"
-            );
+            await staffFetch("/api/data");
 
-
-        hospitalData =
+        const data =
             await response.json();
 
+        latestData = data;
 
-        renderDashboard();
-
+        renderStaffDashboard(data);
 
     } catch (error) {
 
         console.error(
+            "Error loading dashboard:",
             error
         );
-
     }
 }
 
 
-// ======================================================
+// ==========================================
 // RENDER DASHBOARD
-// ======================================================
+// ==========================================
 
-function renderDashboard() {
-
-    renderSummary();
-
-    renderDepartments();
-
-}
-
-
-// ======================================================
-// SUMMARY CARDS
-// ======================================================
-
-function renderSummary() {
-
-    const departments =
-        hospitalData.departments || [];
-
-
-    let waiting = 0;
-
-    let busy = 0;
-
-    let available = 0;
-
-
-    departments.forEach(
-        department => {
-
-            waiting +=
-                department.waiting.length;
-
-
-            department.rooms.forEach(
-                room => {
-
-                    if (
-                        room.currentQueue
-                    ) {
-
-                        busy++;
-
-                    } else {
-
-                        available++;
-
-                    }
-
-                }
-            );
-
-        }
-    );
-
-
-    document.getElementById(
-        "summary-departments"
-    ).textContent =
-        departments.length;
-
-
-    document.getElementById(
-        "summary-waiting"
-    ).textContent =
-        waiting;
-
-
-    document.getElementById(
-        "summary-busy"
-    ).textContent =
-        busy;
-
-
-    document.getElementById(
-        "summary-available"
-    ).textContent =
-        available;
-}
-
-
-// ======================================================
-// RENDER DEPARTMENTS
-// ======================================================
-
-function renderDepartments() {
+function renderStaffDashboard(data) {
 
     const container =
         document.getElementById(
             "departments-container"
         );
 
+    if (!container) {
+        console.error(
+            "departments-container not found"
+        );
+        return;
+    }
 
-    container.innerHTML =
-        "";
+    container.innerHTML = "";
 
+
+    // ======================================
+    // ADD DEPARTMENT
+    // ======================================
+
+    const addDepartmentButton =
+        document.createElement("button");
+
+    addDepartmentButton.className =
+        "button";
+
+    addDepartmentButton.textContent =
+        "+ Add Department";
+
+    addDepartmentButton.addEventListener(
+        "click",
+        addDepartment
+    );
+
+    container.appendChild(
+        addDepartmentButton
+    );
+
+
+    // ======================================
+    // NO DEPARTMENTS
+    // ======================================
 
     if (
-        hospitalData.departments.length ===
-        0
+        !data.departments ||
+        data.departments.length === 0
     ) {
 
-        container.innerHTML = `
+        const message =
+            document.createElement("p");
 
-            <div class="empty-state">
-                No departments have been created yet.
-            </div>
+        message.textContent =
+            "No departments available.";
 
-        `;
+        container.appendChild(message);
 
         return;
     }
 
 
-    hospitalData.departments.forEach(
+    // ======================================
+    // DISPLAY DEPARTMENTS
+    // ======================================
+
+    data.departments.forEach(
         department => {
 
-            const expanded =
-                expandedDepartments.has(
-                    department.id
-                );
-
-
-            const availableRooms =
-                department.rooms.filter(
-                    room =>
-                        !room.currentQueue
-                ).length;
-
-
-            const busyRooms =
-                department.rooms.length -
-                availableRooms;
-
-
-            const card =
+            const departmentBox =
                 document.createElement(
-                    "article"
+                    "div"
                 );
 
-
-            card.className =
-                "department-admin-card";
-
-
-            card.innerHTML = `
-
-                <div class="department-summary">
-
-                    <div class="department-summary-main">
-
-                        <div>
-
-                            <div class="department-name-row">
-
-                                <h2>
-                                    ${escapeHtml(
-                                        department.name
-                                    )}
-                                </h2>
-
-                                <span
-                                    class="
-                                        status-badge
-                                        ${
-                                            department.open
-                                                ? "status-open"
-                                                : "status-closed"
-                                        }
-                                    "
-                                >
-
-                                    ${
-                                        department.open
-                                            ? "OPEN"
-                                            : "CLOSED"
-                                    }
-
-                                </span>
-
-                            </div>
-
-
-                            <p>
-                                Prefix:
-                                <strong>
-                                    ${escapeHtml(
-                                        department.prefix
-                                    )}
-                                </strong>
-                            </p>
-
-                        </div>
-
-
-                        <button
-                            class="
-                                button
-                                compact-button
-                                manage-button
-                            "
-                        >
-
-                            ${
-                                expanded
-                                    ? "Close"
-                                    : "Manage"
-                            }
-
-                        </button>
-
-                    </div>
-
-
-                    <div class="department-mini-stats">
-
-                        <div>
-
-                            <span>
-                                Waiting
-                            </span>
-
-                            <strong>
-                                ${department.waiting.length}
-                            </strong>
-
-                        </div>
-
-
-                        <div>
-
-                            <span>
-                                Rooms
-                            </span>
-
-                            <strong>
-                                ${department.rooms.length}
-                            </strong>
-
-                        </div>
-
-
-                        <div>
-
-                            <span>
-                                Busy
-                            </span>
-
-                            <strong>
-                                ${busyRooms}
-                            </strong>
-
-                        </div>
-
-
-                        <div>
-
-                            <span>
-                                Available
-                            </span>
-
-                            <strong>
-                                ${availableRooms}
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-
-                    ${
-                        expanded
-                            ? buildManagePanel(
-                                department
-                            )
-                            : ""
-                    }
-
-                </div>
-
-            `;
-
-
-            card
-                .querySelector(
-                    ".manage-button"
-                )
-                .addEventListener(
-                    "click",
-                    () => {
-
-                        if (
-                            expandedDepartments.has(
-                                department.id
-                            )
-                        ) {
-
-                            expandedDepartments.delete(
-                                department.id
-                            );
-
-                        } else {
-
-                            expandedDepartments.add(
-                                department.id
-                            );
-
-                        }
-
-
-                        renderDepartments();
-
-                    }
-                );
-
-
-            if (expanded) {
-
-                attachDepartmentControls(
-                    card,
-                    department
-                );
-
-            }
-
-
-            container.appendChild(
-                card
-            );
-
-        }
-    );
-}
-
-
-// ======================================================
-// BUILD MANAGE PANEL
-// ======================================================
-
-function buildManagePanel(
-    department
-) {
-
-    const availableRooms =
-        department.rooms.filter(
-            room =>
-                !room.currentQueue
-        );
-
-
-    return `
-
-        <div class="manage-panel">
-
-            <!-- QUEUE CONTROL -->
-
-            <section class="manage-section">
-
-                <div class="manage-title">
-
-                    <div>
-
-                        <span class="section-kicker">
-                            QUEUE
-                        </span>
-
-                        <h3>
-                            Waiting Patients
-                        </h3>
-
-                    </div>
-
-                    <strong class="waiting-counter">
-                        ${department.waiting.length}
-                    </strong>
-
-                </div>
-
-
-                <div class="waiting-list">
-
-                    ${
-                        department.waiting.length
-                            ? department.waiting
-                                .map(
-                                    number => `
-                                        <span>
-                                            ${escapeHtml(
-                                                number
-                                            )}
-                                        </span>
-                                    `
-                                )
-                                .join("")
-
-                            : `
-                                <div class="empty-small">
-                                    No patients waiting.
-                                </div>
-                            `
-                    }
-
-                </div>
-
-            </section>
-
-
-            <!-- MANUAL ASSIGNMENT -->
-
-            <section class="manage-section">
-
-                <span class="section-kicker">
-                    QUICK ASSIGN
-                </span>
-
-                <h3>
-                    Assign Patient to Room
-                </h3>
-
-
-                <div class="inline-form">
-
-                    <select
-                        class="manual-queue"
-                    >
-
-                        <option value="">
-                            Select queue number
-                        </option>
-
-                        ${
-                            department.waiting
-                                .map(
-                                    number => `
-                                        <option
-                                            value="${escapeHtml(
-                                                number
-                                            )}"
-                                        >
-                                            ${escapeHtml(
-                                                number
-                                            )}
-                                        </option>
-                                    `
-                                )
-                                .join("")
-                        }
-
-                    </select>
-
-
-                    <select
-                        class="manual-room"
-                    >
-
-                        <option value="">
-                            Select available room
-                        </option>
-
-                        ${
-                            availableRooms
-                                .map(
-                                    room => `
-                                        <option
-                                            value="${escapeHtml(
-                                                room.number
-                                            )}"
-                                        >
-                                            ${escapeHtml(
-                                                room.number
-                                            )}
-                                        </option>
-                                    `
-                                )
-                                .join("")
-                        }
-
-                    </select>
-
-
-                    <button
-                        class="
-                            button
-                            compact-button
-                            assign-button
-                        "
-                    >
-                        Assign
-                    </button>
-
-                </div>
-
-            </section>
-
-
-            <!-- ROOMS -->
-
-            <section class="manage-section">
-
-                <div class="manage-title">
-
-                    <div>
-
-                        <span class="section-kicker">
-                            ROOMS
-                        </span>
-
-                        <h3>
-                            Room Control
-                        </h3>
-
-                    </div>
-
-                </div>
-
-
-                <div class="room-admin-list">
-
-                    ${
-                        department.rooms.length
-                            ? department.rooms
-                                .map(
-                                    room =>
-                                        buildRoomRow(
-                                            department,
-                                            room
-                                        )
-                                )
-                                .join("")
-
-                            : `
-                                <div class="empty-small">
-                                    No rooms created.
-                                </div>
-                            `
-                    }
-
-                </div>
-
-
-                <div class="inline-form add-room-form">
-
-                    <input
-                        type="text"
-                        class="new-room-name"
-                        placeholder="New room name e.g. Room 4"
-                    >
-
-
-                    <button
-                        class="
-                            button
-                            compact-button
-                            add-room-button
-                        "
-                    >
-                        + Add Room
-                    </button>
-
-                </div>
-
-            </section>
-
-
-            <!-- SETTINGS -->
-
-            <section class="manage-section">
-
-                <span class="section-kicker">
-                    CUSTOMIZATION
-                </span>
-
-                <h3>
-                    Department Settings
-                </h3>
-
-
-                <div class="settings-grid">
-
-                    <label>
-
-                        Department Name
-
-                        <input
-                            type="text"
-                            class="setting-name"
-                            value="${escapeHtml(
-                                department.name
-                            )}"
-                        >
-
-                    </label>
-
-
-                    <label>
-
-                        Queue Prefix
-
-                        <input
-                            type="text"
-                            class="setting-prefix"
-                            maxlength="4"
-                            value="${escapeHtml(
-                                department.prefix
-                            )}"
-                        >
-
-                    </label>
-
-                </div>
-
-
-                <label class="switch-row">
-
-                    <span>
-
-                        <strong>
-                            Department Open
-                        </strong>
-
-                        <small>
-                            Patients can take new numbers.
-                        </small>
-
-                    </span>
-
-
-                    <input
-                        type="checkbox"
-                        class="setting-open"
-
-                        ${
-                            department.open
-                                ? "checked"
-                                : ""
-                        }
-                    >
-
-                </label>
-
-
-                <button
-                    class="
-                        button
-                        compact-button
-                        save-department-button
-                    "
-                >
-                    Save Changes
-                </button>
-
-            </section>
-
-
-            <!-- DANGER -->
-
-            <section class="manage-section danger-section">
-
-                <span class="section-kicker">
-                    ADVANCED
-                </span>
-
-                <h3>
-                    Reset / Remove
-                </h3>
-
+            departmentBox.className =
+                "queue-box";
+
+            departmentBox.innerHTML = `
+                <h2>
+                    ${escapeHtml(department.name)}
+                </h2>
 
                 <p>
-                    These actions affect the whole department.
+                    Prefix:
+                    <strong>
+                        ${escapeHtml(department.prefix)}
+                    </strong>
                 </p>
 
+                <p>
+                    Status:
+                    <strong>
+                        ${
+                            department.open
+                                ? "Open"
+                                : "Closed"
+                        }
+                    </strong>
+                </p>
 
-                <div class="danger-actions">
+                <div class="staff-buttons">
 
                     <button
-                        class="
-                            button
-                            warning-button
-                            reset-button
-                        "
-                    >
-                        Reset Queue
+                        class="button edit-department">
+                        ✏️ Edit / Rename
                     </button>
 
+                    <button
+                        class="button toggle-department">
+                        ${
+                            department.open
+                                ? "Close Department"
+                                : "Open Department"
+                        }
+                    </button>
 
                     <button
-                        class="
-                            button
-                            danger-button
-                            delete-department-button
-                        "
-                    >
+                        class="button delete-department">
                         Delete Department
                     </button>
 
                 </div>
 
-            </section>
+                <hr>
 
-        </div>
+                <h3>
+                    Waiting Queue
+                </h3>
 
-    `;
-}
+                <div class="waiting-list">
+                    ${
+                        department.waiting &&
+                        department.waiting.length > 0
 
+                            ? department.waiting
+                                .map(
+                                    queue =>
+                                        `<span>${escapeHtml(queue)}</span>`
+                                )
+                                .join(" ")
 
-// ======================================================
-// BUILD ROOM ROW
-// ======================================================
+                            : "<p>No patients waiting</p>"
+                    }
+                </div>
 
-function buildRoomRow(
-    department,
-    room
-) {
+                <hr>
 
-    const busy =
-        Boolean(
-            room.currentQueue
-        );
+                <h3>
+                    Manual Queue Assignment
+                </h3>
 
+                <div class="manual-assignment">
 
-    return `
+                    <label>
+                        Queue Number
+                    </label>
 
-        <div
-            class="room-admin-card"
-            data-room="${escapeHtml(
-                room.number
-            )}"
-        >
+                    <select class="queue-select">
 
-            <div class="room-admin-info">
-
-                <div>
-
-                    <strong class="room-title">
-                        ${escapeHtml(
-                            room.number
-                        )}
-                    </strong>
-
-
-                    <span
-                        class="
-                            status-badge
-                            ${
-                                busy
-                                    ? "status-busy"
-                                    : "status-available"
-                            }
-                        "
-                    >
+                        <option value="">
+                            Select Queue
+                        </option>
 
                         ${
-                            busy
-                                ? "BUSY"
-                                : "AVAILABLE"
+                            (department.waiting || [])
+                                .map(
+                                    queue => `
+                                        <option value="${escapeHtml(queue)}">
+                                            ${escapeHtml(queue)}
+                                        </option>
+                                    `
+                                )
+                                .join("")
                         }
 
-                    </span>
+                    </select>
+
+                    <label>
+                        Room
+                    </label>
+
+                    <select class="room-select">
+
+                        <option value="">
+                            Select Room
+                        </option>
+
+                        ${
+                            (department.rooms || [])
+                                .filter(
+                                    room =>
+                                        room.status ===
+                                        "available"
+                                )
+                                .map(
+                                    room => `
+                                        <option value="${escapeHtml(room.number)}">
+                                            ${escapeHtml(room.number)}
+                                        </option>
+                                    `
+                                )
+                                .join("")
+                        }
+
+                    </select>
+
+                    <button
+                        class="button manual-assign-button">
+                        Assign Queue
+                    </button>
 
                 </div>
 
+                <hr>
 
-                <div class="room-current-patient">
+                <h3>
+                    Rooms
+                </h3>
+            `;
 
-                    ${
-                        busy
-                            ? `
-                                <span>
-                                    Current Patient
-                                </span>
 
-                                <strong>
-                                    ${escapeHtml(
-                                        room.currentQueue
-                                    )}
-                                </strong>
-                            `
-                            : `
-                                <span>
-                                    Ready for next patient
-                                </span>
-                            `
+            // ==================================
+            // EDIT / RENAME DEPARTMENT
+            // ==================================
+
+            const editButton =
+                departmentBox.querySelector(
+                    ".edit-department"
+                );
+
+            editButton.addEventListener(
+                "click",
+                () => {
+                    editDepartment(
+                        department
+                    );
+                }
+            );
+
+
+            // ==================================
+            // OPEN / CLOSE
+            // ==================================
+
+            departmentBox
+                .querySelector(
+                    ".toggle-department"
+                )
+                .addEventListener(
+                    "click",
+                    () => {
+                        toggleDepartment(
+                            department
+                        );
                     }
-
-                </div>
-
-            </div>
+                );
 
 
-            <div class="room-actions">
+            // ==================================
+            // DELETE DEPARTMENT
+            // ==================================
 
-                <button
-                    class="
-                        room-action-button
-                        call-next-button
-                    "
-
-                    ${busy ? "disabled" : ""}
-                >
-                    Call Next
-                </button>
-
-
-                <button
-                    class="
-                        room-action-button
-                        recall-button
-                    "
-
-                    ${!busy ? "disabled" : ""}
-                >
-                    Recall
-                </button>
+            departmentBox
+                .querySelector(
+                    ".delete-department"
+                )
+                .addEventListener(
+                    "click",
+                    () => {
+                        deleteDepartment(
+                            department
+                        );
+                    }
+                );
 
 
-                <button
-                    class="
-                        room-action-button
-                        complete-button
-                    "
+            // ==================================
+            // MANUAL ASSIGNMENT
+            // ==================================
 
-                    ${!busy ? "disabled" : ""}
-                >
-                    Complete
-                </button>
+            departmentBox
+                .querySelector(
+                    ".manual-assign-button"
+                )
+                .addEventListener(
+                    "click",
+                    async () => {
 
-            </div>
+                        const queueNumber =
+                            departmentBox
+                                .querySelector(
+                                    ".queue-select"
+                                )
+                                .value;
+
+                        const roomNumber =
+                            departmentBox
+                                .querySelector(
+                                    ".room-select"
+                                )
+                                .value;
+
+                        if (!queueNumber) {
+
+                            alert(
+                                "Please select a queue number."
+                            );
+
+                            return;
+                        }
+
+                        if (!roomNumber) {
+
+                            alert(
+                                "Please select a room."
+                            );
+
+                            return;
+                        }
+
+                        await assignQueue(
+                            department.id,
+                            queueNumber,
+                            roomNumber
+                        );
+                    }
+                );
 
 
-            <div class="room-customization">
+            // ==================================
+            // DISPLAY ROOMS
+            // ==================================
 
-                <input
-                    type="text"
-                    class="rename-room-input"
-                    value="${escapeHtml(
-                        room.number
-                    )}"
-                >
+            (department.rooms || [])
+                .forEach(room => {
+
+                    const roomBox =
+                        document.createElement(
+                            "div"
+                        );
+
+                    roomBox.style.margin =
+                        "15px 0";
+
+                    roomBox.style.padding =
+                        "15px";
+
+                    roomBox.style.border =
+                        "1px solid #ddd";
+
+                    roomBox.style.borderRadius =
+                        "10px";
+
+                    roomBox.innerHTML = `
+                        <h3>
+                            ${escapeHtml(room.number)}
+                        </h3>
+
+                        <p>
+                            Status:
+                            <strong>
+                                ${escapeHtml(room.status)}
+                            </strong>
+                        </p>
+
+                        <p>
+                            Current Queue:
+                            <strong>
+                                ${
+                                    room.currentQueue
+                                        ? escapeHtml(
+                                            room.currentQueue
+                                        )
+                                        : "None"
+                                }
+                            </strong>
+                        </p>
+
+                        <div class="staff-buttons">
+
+                            <button
+                                class="button call-next-button">
+                                Call Next
+                            </button>
+
+                            <button
+                                class="button complete-patient-button">
+                                Complete Patient
+                            </button>
+
+                            <button
+                                class="button delete-room-button">
+                                Delete Room
+                            </button>
+
+                        </div>
+                    `;
 
 
-                <button
-                    class="small-outline-button rename-room-button"
-                >
-                    Rename
-                </button>
+                    // CALL NEXT
+
+                    roomBox
+                        .querySelector(
+                            ".call-next-button"
+                        )
+                        .addEventListener(
+                            "click",
+                            () => {
+
+                                callNext(
+                                    department.id,
+                                    room.number
+                                );
+                            }
+                        );
 
 
-                <button
-                    class="small-danger-button delete-room-button"
-                    ${busy ? "disabled" : ""}
-                >
-                    Delete
-                </button>
+                    // COMPLETE PATIENT
 
-            </div>
+                    roomBox
+                        .querySelector(
+                            ".complete-patient-button"
+                        )
+                        .addEventListener(
+                            "click",
+                            () => {
 
-        </div>
+                                completePatient(
+                                    department.id,
+                                    room.number
+                                );
+                            }
+                        );
 
-    `;
+
+                    // DELETE ROOM
+
+                    roomBox
+                        .querySelector(
+                            ".delete-room-button"
+                        )
+                        .addEventListener(
+                            "click",
+                            () => {
+
+                                deleteRoom(
+                                    department.id,
+                                    room.number
+                                );
+                            }
+                        );
+
+                    departmentBox.appendChild(
+                        roomBox
+                    );
+                });
+
+
+            // ==================================
+            // ADD ROOM
+            // ==================================
+
+            const addRoomButton =
+                document.createElement(
+                    "button"
+                );
+
+            addRoomButton.className =
+                "button";
+
+            addRoomButton.textContent =
+                "+ Add Room";
+
+            addRoomButton.addEventListener(
+                "click",
+                () => {
+
+                    addRoom(
+                        department.id
+                    );
+                }
+            );
+
+            departmentBox.appendChild(
+                addRoomButton
+            );
+
+
+            container.appendChild(
+                departmentBox
+            );
+        }
+    );
 }
 
 
-// ======================================================
-// ATTACH DEPARTMENT CONTROLS
-// ======================================================
+// ==========================================
+// ADD DEPARTMENT
+// ==========================================
 
-function attachDepartmentControls(
-    card,
+async function addDepartment() {
+
+    let name = prompt(
+        "Enter department name:"
+    );
+
+    if (name === null) {
+        return;
+    }
+
+    name = name.trim();
+
+    if (!name) {
+
+        alert(
+            "Department name cannot be empty."
+        );
+
+        return;
+    }
+
+
+    let prefix = prompt(
+        "Enter queue prefix.\nExample: C"
+    );
+
+    if (prefix === null) {
+        return;
+    }
+
+    prefix =
+        prefix.trim().toUpperCase();
+
+    if (!prefix) {
+
+        alert(
+            "Queue prefix cannot be empty."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await staffFetch(
+                "/api/staff/departments",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            name,
+                            prefix
+                        })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (!response.ok) {
+
+            alert(
+                result.error ||
+                "Unable to add department."
+            );
+
+            return;
+        }
+
+        await loadStaffDashboard();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to add department."
+        );
+    }
+}
+
+
+// ==========================================
+// EDIT / RENAME DEPARTMENT
+// ==========================================
+
+async function editDepartment(
     department
 ) {
 
-    const assignButton =
-        card.querySelector(
-            ".assign-button"
-        );
-
-
-    assignButton.addEventListener(
-        "click",
-        async () => {
-
-            const queue =
-                card.querySelector(
-                    ".manual-queue"
-                ).value;
-
-
-            const room =
-                card.querySelector(
-                    ".manual-room"
-                ).value;
-
-
-            if (
-                !queue ||
-                !room
-            ) {
-
-                showToast(
-                    "Select a queue number and room.",
-                    "error"
-                );
-
-                return;
-            }
-
-
-            await apiRequest(
-                "/api/queue/assign",
-                "POST",
-                {
-                    departmentId:
-                        department.id,
-
-                    queueNumber:
-                        queue,
-
-                    roomNumber:
-                        room
-                },
-
-                "Patient assigned."
-            );
-
-        }
+    let newName = prompt(
+        "Rename Department\n\nEnter department name:",
+        department.name
     );
 
+    // User clicked Cancel
+    if (newName === null) {
+        return;
+    }
 
-    card
-        .querySelector(
-            ".add-room-button"
-        )
-        .addEventListener(
-            "click",
-            async () => {
+    newName = newName.trim();
 
-                const input =
-                    card.querySelector(
-                        ".new-room-name"
-                    );
+    if (!newName) {
 
+        alert(
+            "Department name cannot be empty."
+        );
 
-                const roomNumber =
-                    input.value.trim();
+        return;
+    }
 
 
-                if (!roomNumber) {
+    let newPrefix = prompt(
+        "Queue Prefix\n\nEnter queue prefix:",
+        department.prefix
+    );
 
-                    showToast(
-                        "Enter a room name.",
-                        "error"
-                    );
+    // User clicked Cancel
+    if (newPrefix === null) {
+        return;
+    }
 
-                    return;
-                }
+    newPrefix =
+        newPrefix.trim().toUpperCase();
+
+    if (!newPrefix) {
+
+        alert(
+            "Queue prefix cannot be empty."
+        );
+
+        return;
+    }
 
 
-                await apiRequest(
-                    `/api/staff/departments/${department.id}/rooms`,
-                    "POST",
-                    {
-                        roomNumber
+    try {
+
+        const response =
+            await staffFetch(
+                `/api/staff/departments/${department.id}`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
                     },
 
-                    "Room added."
-                );
-
-            }
-        );
-
-
-    card
-        .querySelector(
-            ".save-department-button"
-        )
-        .addEventListener(
-            "click",
-            async () => {
-
-                const name =
-                    card.querySelector(
-                        ".setting-name"
-                    ).value.trim();
-
-
-                const prefix =
-                    card.querySelector(
-                        ".setting-prefix"
-                    ).value.trim();
-
-
-                const open =
-                    card.querySelector(
-                        ".setting-open"
-                    ).checked;
-
-
-                await apiRequest(
-                    `/api/staff/departments/${department.id}`,
-                    "PUT",
-                    {
-                        name,
-                        prefix,
-                        open
-                    },
-
-                    "Department updated."
-                );
-
-            }
-        );
-
-
-    card
-        .querySelector(
-            ".reset-button"
-        )
-        .addEventListener(
-            "click",
-            async () => {
-
-                const yes =
-                    confirm(
-
-                        `Reset ${department.name}?\n\n` +
-
-                        "This clears all waiting patients, active rooms and resets the queue to 001."
-
-                    );
-
-
-                if (!yes) {
-                    return;
+                    body:
+                        JSON.stringify({
+                            name: newName,
+                            prefix: newPrefix
+                        })
                 }
+            );
 
 
-                const finalCheck =
-                    confirm(
-                        "Final confirmation: reset this queue?"
-                    );
+        let result;
+
+        try {
+            result =
+                await response.json();
+        } catch {
+            result = {};
+        }
 
 
-                if (!finalCheck) {
-                    return;
-                }
+        if (!response.ok) {
+
+            alert(
+                result.error ||
+                "Unable to edit department."
+            );
+
+            return;
+        }
 
 
-                await apiRequest(
-                    "/api/queue/reset",
-                    "POST",
-                    {
-                        departmentId:
-                            department.id,
-
-                        confirmReset:
-                            true
-                    },
-
-                    "Queue reset."
-                );
-
-            }
+        alert(
+            `Department updated successfully.\n\n` +
+            `${department.name} → ${newName}\n` +
+            `Prefix: ${newPrefix}`
         );
 
 
-    card
-        .querySelector(
-            ".delete-department-button"
-        )
-        .addEventListener(
-            "click",
-            async () => {
+        await loadStaffDashboard();
 
-                const yes =
-                    confirm(
-                        `Delete ${department.name}?`
-                    );
+    } catch (error) {
 
-
-                if (!yes) {
-                    return;
-                }
-
-
-                expandedDepartments.delete(
-                    department.id
-                );
-
-
-                await apiRequest(
-                    `/api/staff/departments/${department.id}`,
-                    "DELETE",
-                    null,
-
-                    "Department deleted."
-                );
-
-            }
+        console.error(
+            "Edit department error:",
+            error
         );
 
-
-    card
-        .querySelectorAll(
-            ".room-admin-card"
-        )
-        .forEach(
-            roomElement => {
-
-                const roomNumber =
-                    roomElement.dataset.room;
-
-
-                const callButton =
-                    roomElement.querySelector(
-                        ".call-next-button"
-                    );
-
-
-                const recallButton =
-                    roomElement.querySelector(
-                        ".recall-button"
-                    );
-
-
-                const completeButton =
-                    roomElement.querySelector(
-                        ".complete-button"
-                    );
-
-
-                const renameButton =
-                    roomElement.querySelector(
-                        ".rename-room-button"
-                    );
-
-
-                const deleteButton =
-                    roomElement.querySelector(
-                        ".delete-room-button"
-                    );
-
-
-                callButton.addEventListener(
-                    "click",
-                    async () => {
-
-                        await apiRequest(
-                            "/api/queue/call-next",
-                            "POST",
-                            {
-                                departmentId:
-                                    department.id,
-
-                                roomNumber
-                            },
-
-                            "Next patient called."
-                        );
-
-                    }
-                );
-
-
-                recallButton.addEventListener(
-                    "click",
-                    async () => {
-
-                        await apiRequest(
-                            "/api/queue/recall",
-                            "POST",
-                            {
-                                departmentId:
-                                    department.id,
-
-                                roomNumber
-                            },
-
-                            "Patient recalled."
-                        );
-
-                    }
-                );
-
-
-                completeButton.addEventListener(
-                    "click",
-                    async () => {
-
-                        const yes =
-                            confirm(
-                                `Complete the patient in ${roomNumber}?`
-                            );
-
-
-                        if (!yes) {
-                            return;
-                        }
-
-
-                        await apiRequest(
-                            "/api/queue/complete",
-                            "POST",
-                            {
-                                departmentId:
-                                    department.id,
-
-                                roomNumber
-                            },
-
-                            "Patient completed."
-                        );
-
-                    }
-                );
-
-
-                renameButton.addEventListener(
-                    "click",
-                    async () => {
-
-                        const newName =
-                            roomElement
-                                .querySelector(
-                                    ".rename-room-input"
-                                )
-                                .value
-                                .trim();
-
-
-                        if (!newName) {
-
-                            showToast(
-                                "Enter a room name.",
-                                "error"
-                            );
-
-                            return;
-                        }
-
-
-                        await apiRequest(
-                            `/api/staff/departments/${department.id}/rooms/${encodeURIComponent(roomNumber)}`,
-                            "PUT",
-                            {
-                                newRoomNumber:
-                                    newName
-                            },
-
-                            "Room renamed."
-                        );
-
-                    }
-                );
-
-
-                deleteButton.addEventListener(
-                    "click",
-                    async () => {
-
-                        const yes =
-                            confirm(
-                                `Delete ${roomNumber}?`
-                            );
-
-
-                        if (!yes) {
-                            return;
-                        }
-
-
-                        await apiRequest(
-                            `/api/staff/departments/${department.id}/rooms/${encodeURIComponent(roomNumber)}`,
-                            "DELETE",
-                            null,
-
-                            "Room deleted."
-                        );
-
-                    }
-                );
-
-            }
+        alert(
+            "Unable to edit department. Please try again."
         );
+    }
 }
 
 
-// ======================================================
-// ADD DEPARTMENT FORM
-// ======================================================
+// ==========================================
+// OPEN / CLOSE DEPARTMENT
+// ==========================================
 
-document
-    .getElementById(
-        "add-department-form"
-    )
-    .addEventListener(
-        "submit",
-        async event => {
-
-            event.preventDefault();
-
-
-            const name =
-                document
-                    .getElementById(
-                        "new-department-name"
-                    )
-                    .value
-                    .trim();
-
-
-            const prefix =
-                document
-                    .getElementById(
-                        "new-department-prefix"
-                    )
-                    .value
-                    .trim();
-
-
-            if (
-                !name ||
-                !prefix
-            ) {
-
-                showToast(
-                    "Enter department name and prefix.",
-                    "error"
-                );
-
-                return;
-            }
-
-
-            const success =
-                await apiRequest(
-                    "/api/staff/departments",
-                    "POST",
-                    {
-                        name,
-                        prefix
-                    },
-
-                    "Department added."
-                );
-
-
-            if (success) {
-
-                event.target.reset();
-
-            }
-
-        }
-    );
-
-
-// ======================================================
-// API REQUEST
-// ======================================================
-
-async function apiRequest(
-    url,
-    method,
-    body,
-    successMessage
+async function toggleDepartment(
+    department
 ) {
 
     try {
 
-        const options = {
-            method
-        };
-
-
-        if (body !== null) {
-
-            options.headers = {
-                "Content-Type":
-                    "application/json"
-            };
-
-
-            options.body =
-                JSON.stringify(
-                    body
-                );
-        }
-
-
         const response =
-            await fetch(
-                url,
-                options
+            await staffFetch(
+                `/api/staff/departments/${department.id}`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            open:
+                                !department.open
+                        })
+                }
             );
 
+        const result =
+            await response.json();
 
-        if (
-            response.status ===
-            401
-        ) {
+        if (!response.ok) {
 
-            window.location.href =
-                "/staff-login.html";
+            alert(
+                result.error ||
+                "Unable to update department."
+            );
 
-            return false;
+            return;
         }
+
+        await loadStaffDashboard();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to update department."
+        );
+    }
+}
+
+
+// ==========================================
+// DELETE DEPARTMENT
+// ==========================================
+
+async function deleteDepartment(
+    department
+) {
+
+    const confirmDelete =
+        confirm(
+            `Delete department "${department.name}"?\n\n` +
+            `This cannot be undone.`
+        );
+
+    if (!confirmDelete) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await staffFetch(
+                `/api/staff/departments/${department.id}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (!response.ok) {
+
+            alert(
+                result.error ||
+                "Unable to delete department."
+            );
+
+            return;
+        }
+
+        await loadStaffDashboard();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to delete department."
+        );
+    }
+}
+
+
+// ==========================================
+// ADD ROOM
+// ==========================================
+
+async function addRoom(
+    departmentId
+) {
+
+    let roomNumber = prompt(
+        "Enter room name or number:\nExample: Room 3"
+    );
+
+    if (roomNumber === null) {
+        return;
+    }
+
+    roomNumber =
+        roomNumber.trim();
+
+    if (!roomNumber) {
+
+        alert(
+            "Room name cannot be empty."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await staffFetch(
+                `/api/staff/departments/${departmentId}/rooms`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            roomNumber
+                        })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (!response.ok) {
+
+            alert(
+                result.error ||
+                "Unable to add room."
+            );
+
+            return;
+        }
+
+        await loadStaffDashboard();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to add room."
+        );
+    }
+}
+
+
+// ==========================================
+// DELETE ROOM
+// ==========================================
+
+async function deleteRoom(
+    departmentId,
+    roomNumber
+) {
+
+    const confirmDelete =
+        confirm(
+            `Delete ${roomNumber}?`
+        );
+
+    if (!confirmDelete) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await staffFetch(
+                `/api/staff/departments/${departmentId}/rooms/${encodeURIComponent(roomNumber)}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (!response.ok) {
+
+            alert(
+                result.error ||
+                "Unable to delete room."
+            );
+
+            return;
+        }
+
+        await loadStaffDashboard();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to delete room."
+        );
+    }
+}
+
+
+// ==========================================
+// CALL NEXT
+// ==========================================
+
+async function callNext(
+    departmentId,
+    roomNumber
+) {
+
+    try {
+
+        const response =
+            await staffFetch(
+                "/api/queue/call-next",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            departmentId,
+                            roomNumber
+                        })
+                }
+            );
 
 
         const result =
@@ -1596,131 +1054,298 @@ async function apiRequest(
 
         if (!response.ok) {
 
-            showToast(
+            alert(
                 result.error ||
-                "Request failed.",
-                "error"
+                "Unable to call next patient."
             );
 
-            return false;
+            return;
         }
 
 
-        showToast(
-            successMessage,
-            "success"
+        alert(
+            `Queue ${result.queueNumber} called.\n\n` +
+            `Department: ${result.department}\n` +
+            `Room: ${result.room}`
         );
 
 
-        return true;
-
+        await loadStaffDashboard();
 
     } catch (error) {
 
-        console.error(
-            error
+        console.error(error);
+
+        alert(
+            "Unable to call next patient."
         );
-
-
-        showToast(
-            "Unable to connect to server.",
-            "error"
-        );
-
-
-        return false;
     }
 }
 
 
-// ======================================================
-// TOAST
-// ======================================================
+// ==========================================
+// MANUAL ASSIGN QUEUE
+// ==========================================
 
-let toastTimer = null;
-
-
-function showToast(
-    message,
-    type = "success"
+async function assignQueue(
+    departmentId,
+    queueNumber,
+    roomNumber
 ) {
 
-    const toast =
-        document.getElementById(
-            "toast"
+    try {
+
+        const response =
+            await staffFetch(
+                "/api/queue/assign",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            departmentId,
+                            queueNumber,
+                            roomNumber
+                        })
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                result.error ||
+                "Unable to assign queue."
+            );
+
+            return;
+        }
+
+
+        alert(
+            `Queue ${result.queueNumber} assigned.\n\n` +
+            `Department: ${result.department}\n` +
+            `Room: ${result.room}`
         );
 
 
-    toast.textContent =
-        message;
+        await loadStaffDashboard();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to assign queue."
+        );
+    }
+}
 
 
-    toast.className =
-        `toast show ${type}`;
+// ==========================================
+// COMPLETE PATIENT
+// ==========================================
+
+async function completePatient(
+    departmentId,
+    roomNumber
+) {
+
+    const confirmComplete =
+        confirm(
+            `Complete patient in ${roomNumber}?`
+        );
+
+    if (!confirmComplete) {
+        return;
+    }
 
 
-    clearTimeout(
-        toastTimer
+    try {
+
+        const response =
+            await staffFetch(
+                "/api/queue/complete",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            departmentId,
+                            roomNumber
+                        })
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                result.error ||
+                "Unable to complete patient."
+            );
+
+            return;
+        }
+
+
+        alert(
+            `Completed: ${result.completedQueue}\n\n` +
+            `${result.room} is now available.`
+        );
+
+
+        await loadStaffDashboard();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to complete patient."
+        );
+    }
+}
+
+
+// ==========================================
+// REAL-TIME SOCKET.IO
+// ==========================================
+
+if (socket) {
+
+    socket.on(
+        "connect",
+        () => {
+
+            console.log(
+                "MediQueue real-time connected."
+            );
+        }
     );
 
 
-    toastTimer =
-        setTimeout(
-            () => {
+    socket.on(
+        "queue:update",
+        data => {
 
-                toast.className =
-                    "toast";
+            latestData = data;
 
-            },
-            2600
-        );
+            renderStaffDashboard(data);
+        }
+    );
+
+
+    socket.on(
+        "disconnect",
+        () => {
+
+            console.log(
+                "MediQueue real-time disconnected."
+            );
+        }
+    );
 }
 
 
-// ======================================================
-// ESCAPE HTML
-// ======================================================
+// ==========================================
+// FALLBACK REFRESH
+// ==========================================
 
-function escapeHtml(
-    value
-) {
-
-    return String(value)
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-}
-
-
-// ======================================================
-// FALLBACK SYNC
-// ======================================================
+// Socket.IO normally updates instantly.
+// This keeps the dashboard updated if
+// the socket temporarily disconnects.
 
 setInterval(
-    loadData,
+    () => {
+
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+
+            loadStaffDashboard();
+        }
+
+    },
     15000
 );
 
 
-// ======================================================
-// START
-// ======================================================
+// ==========================================
+// LOGOUT
+// ==========================================
 
-loadData();
+const logoutButton =
+    document.getElementById(
+        "logout-button"
+    );
+
+if (logoutButton) {
+
+    logoutButton.addEventListener(
+        "click",
+        async () => {
+
+            try {
+
+                await staffFetch(
+                    "/api/staff/logout",
+                    {
+                        method: "POST"
+                    }
+                );
+
+            } catch (error) {
+
+                console.error(error);
+
+            } finally {
+
+                window.location.replace(
+                    "/staff-login.html"
+                );
+            }
+        }
+    );
+}
+
+
+// ==========================================
+// BASIC HTML SAFETY
+// ==========================================
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+// ==========================================
+// START
+// ==========================================
+
+loadStaffDashboard();
