@@ -2,6 +2,19 @@
 <html lang="en">
 
 <head>
+    <style>
+html.mq-brand-loading body {
+    visibility: hidden !important;
+}
+
+html.mq-brand-ready body {
+    visibility: visible;
+}
+</style>
+
+<script>
+document.documentElement.classList.add("mq-brand-loading");
+</script>
     <meta charset="UTF-8">
     <meta
         name="viewport"
@@ -13,8 +26,7 @@
     <link
     id="website-favicon"
     rel="icon"
-    type="image/png"
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230F9D8A'/%3E%3Cpath d='M27 12h10v15h15v10H37v15H27V37H12V27h15z' fill='white'/%3E%3C/svg%3E"
+    href="data:,"
 >
 
     <link

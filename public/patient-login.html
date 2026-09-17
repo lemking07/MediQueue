@@ -22,4 +22,25 @@
 <p class="account-switch" id="loginPrompt" hidden>Already have an account? <button id="loginTab" class="text-link" type="button">Log in</button></p>
 </main>
 <script src="account-theme.js"></script><script src="account.js"></script>
+<script>
+document.querySelectorAll('input[type="password"]').forEach(input => {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "password-toggle";
+  button.textContent = "👁";
+  button.setAttribute("aria-label", "Show password");
+
+  input.insertAdjacentElement("afterend", button);
+
+  button.addEventListener("click", () => {
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    button.setAttribute(
+      "aria-label",
+      show ? "Hide password" : "Show password"
+    );
+    button.textContent = show ? "🙈" : "👁";
+  });
+});
+</script>
 </body></html>

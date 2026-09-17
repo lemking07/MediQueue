@@ -635,6 +635,9 @@ renderAll();
 
 // Show dashboard after saved branding is applied
 document.body.classList.remove("dashboard-loading");
+document.documentElement.classList.remove("mq-brand-loading");
+document.documentElement.classList.add("mq-brand-ready");
+document.body.classList.remove("dashboard-loading");
 
 return data;
 

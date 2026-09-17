@@ -430,6 +430,9 @@ async function loadData() {
 
 // Show patient page after branding has loaded
 document.body.classList.remove("dashboard-loading");
+document.documentElement.classList.remove("mq-brand-loading");
+document.documentElement.classList.add("mq-brand-ready");
+document.body.classList.remove("dashboard-loading");
 
 return data;
 

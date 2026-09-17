@@ -2,6 +2,19 @@
 <html lang="en">
 
 <head>
+    <style>
+html.mq-brand-loading body {
+    visibility: hidden !important;
+}
+
+html.mq-brand-ready body {
+    visibility: visible;
+}
+</style>
+
+<script>
+document.documentElement.classList.add("mq-brand-loading");
+</script>
 
     <meta charset="UTF-8">
 

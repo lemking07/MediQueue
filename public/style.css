@@ -10299,3 +10299,20 @@ body.patient-sidebar-collapsed #patient-page {
   .patient-portal-body .mq-menu-toggle,
   .patient-portal-body .patient-portal-container {transition:none!important;}
 }
+
+.password-toggle {
+  margin-left: 8px;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+}
+/* Prevent default theme and logo from flashing */
+html.mq-brand-loading body {
+    visibility: hidden;
+}
+
+html.mq-brand-ready body {
+    visibility: visible;
+}
