@@ -1,0 +1,20 @@
+(()=>{'use strict';
+const $=id=>document.getElementById(id), msg=$('message');let admin=false;
+const format=x=>x?new Date(x).toLocaleString():'Still working';
+const hours=(start,end,now)=>Math.max(0,(new Date(end||now)-new Date(start))/3600000).toFixed(2);
+const cell=(row,text)=>{const td=document.createElement('td');td.textContent=String(text??'');row.append(td);return td;};
+const table=(id,items,render)=>{const body=$(id);body.replaceChildren();if(!items.length){const tr=body.insertRow();cell(tr,'No records yet.');return;}items.forEach(item=>render(body.insertRow(),item));};
+async function api(path,method='GET',body){const response=await fetch(path,{method,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,credentials:'same-origin'});if(response.status===401){location.href='/staff-login.html';throw Error('Please log in.');}const data=await response.json();if(!response.ok)throw Error(data.error||'Request failed.');return data;}
+function notice(text,error=false){msg.textContent=text;msg.className=error?'mq-error':'mq-success';}
+async function refresh(){try{const session=await api('/api/staff/session');if(!session.loggedIn&&!session.staffLoggedIn){location.href='/staff-login.html';return;}admin=session.role==='admin';$('identity').textContent='Signed in as '+(session.username||session.staffUsername||'staff')+(admin?' · Administrator':' · Staff');document.querySelectorAll('.admin-only').forEach(el=>el.hidden=!admin);['approval','staff-management','activity-reports'].forEach(id=>$(id).hidden=!admin);
+const report=await api('/api/staff/work-report'),now=report.serverTime;
+const myShifts=admin?report.shifts.filter(s=>s.staff_id===session.accountId):report.shifts;
+const myActions=admin?report.actions.filter(a=>a.staff_id===session.accountId):report.actions;
+table('my-shifts',myShifts,(r,s)=>{cell(r,format(s.clock_in));cell(r,format(s.clock_out));cell(r,hours(s.clock_in,s.clock_out,now));});table('my-actions',myActions,(r,a)=>{cell(r,format(a.happened_at));cell(r,a.action);cell(r,a.details);});
+const active=myShifts.some(s=>!s.clock_out);$('clock-in').disabled=active;$('clock-out').disabled=!active;$('shift-status').textContent=active?'Currently clocked in':'Not clocked in';
+if(admin){table('all-shifts',report.shifts,(r,s)=>{cell(r,(s.full_name||'')+' ('+(s.college_id||s.staff_id||'')+')');cell(r,format(s.clock_in));cell(r,format(s.clock_out));cell(r,hours(s.clock_in,s.clock_out,now));});table('all-actions',report.actions,(r,a)=>{cell(r,(a.full_name||'')+' ('+(a.college_id||a.staff_id||'')+')');cell(r,format(a.happened_at));cell(r,a.action);cell(r,a.details);});const accounts=await api('/api/staff/accounts');table('accounts',accounts,(r,a)=>{cell(r,a.staff_id);cell(r,a.full_name);cell(r,a.username);cell(r,a.role);cell(r,a.approved?'Active':'Pending / disabled');const td=cell(r,'');if(a.role!=='admin'){const b=document.createElement('button');b.textContent=a.approved?'Disable':'Enable';b.onclick=()=>change(a.id,!a.approved);td.append(b);}});const pending=accounts.filter(a=>!a.approved);$('pending').replaceChildren();if(!pending.length)$('pending').textContent='No pending accounts.';pending.forEach(a=>{const p=document.createElement('p');p.textContent=a.full_name+' · '+a.staff_id+' · '+a.username+' ';const b=document.createElement('button');b.textContent='Approve';b.onclick=()=>change(a.id,true);p.append(b);$('pending').append(p);});}
+}catch(e){notice(e.message,true);}}
+async function change(id,approved){if(!confirm((approved?'Enable':'Disable')+' this staff account?'))return;try{await api('/api/staff/accounts/'+id,'PATCH',{approved});notice('Account updated.');await refresh();}catch(e){notice(e.message,true);}}
+for(const action of ['clock-in','clock-out'])$(action).onclick=async()=>{try{await api('/api/staff/'+action,'POST');notice('Attendance recorded.');await refresh();}catch(e){notice(e.message,true);}};
+refresh();window.addEventListener('hashchange',()=>{if(!admin&&['#approval','#staff-management','#activity-reports'].includes(location.hash))location.hash='#attendance';});
+})();

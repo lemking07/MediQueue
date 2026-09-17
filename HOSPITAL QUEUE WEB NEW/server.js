@@ -75,24 +75,18 @@ app.use(
 );
 
 
-// Individual staff accounts. Configure ADMIN_STAFF_ID and ADMIN_PASSWORD before first run.
-patientDb.exec(`CREATE TABLE IF NOT EXISTS staff_accounts (id INTEGER PRIMARY KEY, staff_id TEXT NOT NULL UNIQUE, full_name TEXT NOT NULL, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'staff', approved INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
-CREATE TABLE IF NOT EXISTS staff_shifts (id INTEGER PRIMARY KEY, staff_id INTEGER NOT NULL, clock_in TEXT NOT NULL, clock_out TEXT, FOREIGN KEY(staff_id) REFERENCES staff_accounts(id));
-CREATE TABLE IF NOT EXISTS staff_actions (id INTEGER PRIMARY KEY, staff_id INTEGER NOT NULL, action TEXT NOT NULL, details TEXT NOT NULL DEFAULT '', happened_at TEXT NOT NULL, FOREIGN KEY(staff_id) REFERENCES staff_accounts(id));`);
-const staffHash = async password => { const salt=crypto.randomBytes(16).toString('hex'); const hash=await scrypt(password,salt,64); return salt+':'+hash.toString('hex'); };
-const staffVerify = async (password,stored) => { const [salt,hex]=String(stored).split(':'); if(!salt||!hex||hex.length!==128)return false; const hash=await scrypt(password,salt,64); return crypto.timingSafeEqual(hash,Buffer.from(hex,'hex')); };
-function staffLog(id,action,details='') { if(id)patientDb.prepare('INSERT INTO staff_actions (staff_id,action,details,happened_at) VALUES (?,?,?,?)').run(id,action,details,isoNow()); }
-function closeShift(id) { const row=patientDb.prepare('SELECT id FROM staff_shifts WHERE staff_id=? AND clock_out IS NULL ORDER BY id DESC LIMIT 1').get(id); if(row)patientDb.prepare('UPDATE staff_shifts SET clock_out=? WHERE id=?').run(isoNow(),row.id); }
-async function seedAdmin(){
- const staffId=process.env.ADMIN_STAFF_ID, password=process.env.ADMIN_PASSWORD;
- if(!staffId||!password){ console.warn('Set ADMIN_STAFF_ID and ADMIN_PASSWORD to create the initial administrator.');return; }
- if(password.length<12)throw new Error('ADMIN_PASSWORD must have at least 12 characters');
- if(!patientDb.prepare("SELECT id FROM staff_accounts WHERE role='admin' LIMIT 1").get()){
- patientDb.prepare("INSERT INTO staff_accounts (staff_id,full_name,username,password_hash,role,approved) VALUES (?,?,?,?, 'admin',1)").run(staffId,'Administrator',process.env.ADMIN_USERNAME||'admin',await staffHash(password));
- console.log('Administrator account created.');
- }
-}
-seedAdmin().catch(e=>console.error('Administrator setup:',e.message));
+// ======================================================
+// STAFF LOGIN
+// ======================================================
+
+const STAFF_USERNAME =
+    process.env.STAFF_USERNAME ||
+    "admin";
+
+const STAFF_PASSWORD =
+    process.env.STAFF_PASSWORD ||
+    "hospital123";
+
 
 // ======================================================
 // DEFAULT PATIENT PORTAL SETTINGS
@@ -1077,66 +1071,68 @@ app.use(
 // STAFF LOGIN API
 // ======================================================
 
-app.post('/api/staff/signup',async(req,res)=>{
- try {const {staffId,fullName,username,password}=req.body||{};
- if(!/^[A-Za-z0-9-]{3,32}$/.test(staffId||'')||!String(fullName||'').trim()||!/^[A-Za-z0-9_.-]{3,32}$/.test(username||'')||typeof password!=='string'||password.length<10)return res.status(400).json({error:'Enter a valid college ID, name, username and password (at least 10 characters).'});
- patientDb.prepare('INSERT INTO staff_accounts (staff_id,full_name,username,password_hash) VALUES (?,?,?,?)').run(staffId,fullName.trim(),username,await staffHash(password));
- res.status(201).json({success:true,message:'Account submitted for administrator approval.'});
- }catch(e){res.status(409).json({error:'College ID or username already registered.'});}
-});
-app.post('/api/staff/login',async(req,res)=>{
- try {const {username,password}=req.body||{};const account=patientDb.prepare('SELECT * FROM staff_accounts WHERE username=? OR staff_id=?').get(username,username);
- if(!account||typeof password!=='string'||!(await staffVerify(password,account.password_hash)))return res.status(401).json({error:'Invalid login details.'});
- if(!account.approved)return res.status(403).json({error:'Your account is awaiting administrator approval.'});
- req.session.regenerate(error=>{if(error)return res.status(500).json({error:'Unable to create session.'});req.session.staffLoggedIn=true;req.session.staffUsername=account.username;req.session.staffId=account.id;req.session.staffRole=account.role;req.session.save(err=>{if(err)return res.status(500).json({error:'Unable to save session.'});staffLog(account.id,'login');res.json({success:true});});});
- }catch(e){res.status(500).json({error:'Login failed.'});}
-});
-app.get('/api/staff/pending',requireStaffLogin,(req,res)=>{
- if(req.session.staffRole!=='admin')return res.status(403).json({error:'Administrator only.'});
- res.json(patientDb.prepare('SELECT id,staff_id,full_name,username,created_at FROM staff_accounts WHERE approved=0').all());
-});
-app.post('/api/staff/approve/:id',requireStaffLogin,(req,res)=>{
- if(req.session.staffRole!=='admin')return res.status(403).json({error:'Administrator only.'});
- const result=patientDb.prepare("UPDATE staff_accounts SET approved=1 WHERE id=? AND role='staff'").run(req.params.id);
- staffLog(req.session.staffId,'approve_staff',String(req.params.id));res.json({success:result.changes>0});
-});
-app.post('/api/staff/clock-in',requireStaffLogin,(req,res)=>{
- const id=req.session.staffId;if(!id)return res.status(403).json({error:'Individual account required.'});
- if(patientDb.prepare('SELECT id FROM staff_shifts WHERE staff_id=? AND clock_out IS NULL').get(id))return res.status(409).json({error:'Already clocked in.'});
- patientDb.prepare('INSERT INTO staff_shifts (staff_id,clock_in) VALUES (?,?)').run(id,isoNow());staffLog(id,'clock_in');res.json({success:true});
-});
-app.post('/api/staff/clock-out',requireStaffLogin,(req,res)=>{
- const id=req.session.staffId;if(!patientDb.prepare('SELECT id FROM staff_shifts WHERE staff_id=? AND clock_out IS NULL').get(id))return res.status(409).json({error:'Not clocked in.'});
- closeShift(id);staffLog(id,'clock_out');res.json({success:true});
-});
-// Administrative account management: server-side role checks on every endpoint.
-const requireAdmin=(req,res,next)=>req.session.staffRole==='admin'?next():res.status(403).json({error:'Administrator only.'});
-app.get('/api/staff/accounts',requireStaffLogin,requireAdmin,(req,res)=>{
- res.json(patientDb.prepare('SELECT id,staff_id,full_name,username,role,approved,created_at FROM staff_accounts ORDER BY id DESC').all());
-});
-app.patch('/api/staff/accounts/:id',requireStaffLogin,requireAdmin,(req,res)=>{
- const id=Number(req.params.id), approved=req.body?.approved;
- if(!Number.isSafeInteger(id)||id<1||typeof approved!=='boolean')return res.status(400).json({error:'Invalid account or approval status.'});
- const target=patientDb.prepare('SELECT id,role,approved FROM staff_accounts WHERE id=?').get(id);
- if(!target)return res.status(404).json({error:'Account not found.'});
- if(target.role==='admin'||id===req.session.staffId)return res.status(403).json({error:'Administrator accounts cannot be changed here.'});
- patientDb.prepare('UPDATE staff_accounts SET approved=? WHERE id=?').run(approved?1:0,id);
- staffLog(req.session.staffId,approved?'enable_staff':'disable_staff',String(id));
- res.json({success:true});
-});
-app.get('/api/staff/work-report',requireStaffLogin,(req,res)=>{
- const admin=req.session.staffRole==='admin', id=req.session.staffId;
- const shifts=admin?patientDb.prepare('SELECT s.*,a.staff_id AS college_id,a.full_name FROM staff_shifts s JOIN staff_accounts a ON a.id=s.staff_id ORDER BY s.id DESC LIMIT 500').all():patientDb.prepare('SELECT * FROM staff_shifts WHERE staff_id=? ORDER BY id DESC LIMIT 100').all(id);
- const actions=admin?patientDb.prepare('SELECT l.*,a.staff_id AS college_id,a.full_name FROM staff_actions l JOIN staff_accounts a ON a.id=l.staff_id ORDER BY l.id DESC LIMIT 500').all():patientDb.prepare('SELECT * FROM staff_actions WHERE staff_id=? ORDER BY id DESC LIMIT 100').all(id);
- res.json({shifts,actions,serverTime:isoNow()});
-});
-// Audit successful staff operations; only record action identifiers, never patient names or passwords.
-app.use((req,res,next)=>{
- if(req.session?.staffId && /^(POST|PUT|PATCH|DELETE)$/.test(req.method) && (/^\/api\/queue\//.test(req.path)||/^\/api\/staff\/(departments|portal-settings)/.test(req.path))){
- const id=req.session.staffId, action=req.method+' '+req.path;
- res.on('finish',()=>{if(res.statusCode>=200&&res.statusCode<300)staffLog(id,action);});
- }next();
-});
+app.post(
+    "/api/staff/login",
+    (req, res) => {
+
+        const {
+            username,
+            password
+        } = req.body;
+
+
+        if (
+            username ===
+                STAFF_USERNAME &&
+            password ===
+                STAFF_PASSWORD
+        ) {
+
+            req.session
+                .staffLoggedIn =
+                true;
+
+            req.session
+                .staffUsername =
+                username;
+
+
+            req.session.save(
+                error => {
+
+                    if (error) {
+
+                        return res
+                            .status(500)
+                            .json({
+                                error:
+                                    "Unable to create login session."
+                            });
+                    }
+
+
+                    return res.json({
+                        success: true
+                    });
+
+                }
+            );
+
+
+            return;
+        }
+
+
+        res
+            .status(401)
+            .json({
+                error:
+                    "Invalid username or password."
+            });
+
+    }
+);
+
 
 // ======================================================
 // STAFF SESSION
@@ -1158,10 +1154,7 @@ app.get(
             username:
                 req.session
                     ?.staffUsername ||
-                null,
-            staffId: req.session?.staffId || null,
-            accountId: req.session?.staffId || null,
-            role: req.session?.staffRole || null
+                null
 
         });
 
@@ -1185,7 +1178,6 @@ app.post(
         }
 
 
-        if(req.session.staffId){staffLog(req.session.staffId,"logout");closeShift(req.session.staffId);}
         req.session.destroy(
             error => {
 

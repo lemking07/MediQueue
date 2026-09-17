@@ -1,0 +1,1 @@
+Back up your project. Copy public/patient.html and public/style.css into your existing public folder, replacing those two files only. Restart npm start and refresh browser. Keeps existing patient.js, patient-welcome.js, server and database unchanged.

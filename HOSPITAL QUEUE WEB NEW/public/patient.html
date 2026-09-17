@@ -66,7 +66,7 @@
     <!-- MAIN PORTAL CONTAINER -->
     <!-- ============================================== -->
 
-    <button id="mq-menu-toggle" class="mq-menu-toggle" type="button" aria-controls="mq-account-nav" aria-expanded="true" aria-label="Hide patient sidebar">☰</button>
+    <button id="mq-menu-toggle" class="mq-menu-toggle" type="button" aria-controls="mq-account-nav" aria-expanded="false">☰ Menu</button>
     <nav id="mq-account-nav" class="mq-account-nav" aria-label="Patient account menu">
         <strong class="mq-menu-title">My account</strong>
         <button id="mq-change-language" type="button">🌐 Language</button>
@@ -932,7 +932,22 @@
 <script src="patient.js"></script>
 <script src="patient-welcome.js" defer></script>
 <script>document.getElementById("mq-logout").addEventListener("click",async()=>{const r=await fetch("/api/patient/logout",{method:"POST"});if(r.ok){localStorage.removeItem("mediqueue_patient_ticket");sessionStorage.removeItem("mediqueue_patient_language");location.href="/patient-login.html";}});</script>
-
+<script>
+(function () {
+  document.getElementById('mq-change-language').addEventListener('click', () => {
+    const screen = document.getElementById('patient-language-screen');
+    if (screen) { screen.hidden = false; document.body.classList.remove('dashboard-loading'); }
+    document.getElementById('mq-account-nav').classList.remove('mq-menu-open');
+    document.getElementById('mq-menu-toggle').setAttribute('aria-expanded', 'false');
+  });
+  const toggle = document.getElementById('mq-menu-toggle');
+  const menu = document.getElementById('mq-account-nav');
+  toggle.addEventListener('click', () => {
+    const open = menu.classList.toggle('mq-menu-open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+})();
+</script>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -958,7 +973,6 @@
 </div>
 
 <script src="mediqueue-i18n.js"></script>
-<script src="patient-navigation-repair.js" defer></script>
 </body>
 
 </html>

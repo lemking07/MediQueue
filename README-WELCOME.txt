@@ -1,0 +1,1 @@
+Welcome username update: Copy these files into your existing project. Keep data/queue.json and database/mediqueue.db unchanged. Restart npm start and log in. Greeting uses /api/patient/me and is only shown after login. Do not use real patient data in this prototype.

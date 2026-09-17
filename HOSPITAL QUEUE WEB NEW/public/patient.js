@@ -3969,6 +3969,7 @@ document.querySelectorAll("[data-language]").forEach(button => {
     button.addEventListener("click", () => {
         patientLanguage = button.dataset.language;
         sessionStorage.setItem("mediqueue_patient_language", patientLanguage);
+        window.MediQueueI18n?.setLanguage(patientLanguage);
 
         document.documentElement.lang = patientLanguage;
 

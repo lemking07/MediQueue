@@ -259,19 +259,6 @@
 
         </button>
 
-        <!-- Staff attendance is available to every authenticated staff member. -->
-        <span class="sidebar-section-label second-label">STAFF</span>
-        <a class="sidebar-nav-item" href="/staff-work.html#attendance" style="text-decoration:none">
-            <span class="sidebar-nav-icon" aria-hidden="true">◷</span>
-            <span class="sidebar-nav-text"><strong>My Work &amp; Attendance</strong><small>Hours and activity</small></span>
-        </a>
-        <!-- Hidden by default; shown only after a verified admin session. -->
-        <div id="mq-admin-sidebar" hidden>
-            <span class="sidebar-section-label second-label">ADMINISTRATION</span>
-            <a class="sidebar-nav-item" href="/staff-work.html#approval" style="text-decoration:none"><span class="sidebar-nav-icon" aria-hidden="true">✓</span><span class="sidebar-nav-text"><strong>Staff Approvals</strong><small>Approve new accounts</small></span></a>
-            <a class="sidebar-nav-item" href="/staff-work.html#staff-management" style="text-decoration:none"><span class="sidebar-nav-icon" aria-hidden="true">♙</span><span class="sidebar-nav-text"><strong>Staff Management</strong><small>Registered staff</small></span></a>
-            <a class="sidebar-nav-item" href="/staff-work.html#activity-reports" style="text-decoration:none"><span class="sidebar-nav-icon" aria-hidden="true">▤</span><span class="sidebar-nav-text"><strong>Staff Activity Reports</strong><small>Shifts and actions</small></span></a>
-        </div>
     </nav>
 
 
@@ -386,7 +373,6 @@
     </div>
 
 
-    <div id="staff-session-greeting" class="staff-session-greeting" role="status">Welcome!</div>
     <div class="staff-topbar-right">
 
         <div
@@ -3388,14 +3374,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="staff.js"></script>
-<script src="staff-sidebar-toggle.js" defer></script>
-<script src="staff-header-repair.js" defer></script>
-<script>
-// Only reveal administration navigation after the server confirms the role.
-fetch('/api/staff/session', {credentials:'same-origin'})
-  .then(response => response.ok ? response.json() : null)
-  .then(session => {if(session?.role === 'admin') document.getElementById('mq-admin-sidebar').hidden = false;})
-  .catch(() => {});
-</script></body>
+<script src="mediqueue-i18n.js"></script>
+</body>
 
 </html>
