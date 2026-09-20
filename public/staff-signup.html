@@ -1,22 +1,13 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Staff signup</title><link rel="stylesheet" href="style.css"><main class="container"><div class="queue-box"><h1>Create staff account</h1><p>Use your unique college ID. Administrator approval is required.</p><form id="form"><input name="staffId" placeholder="College ID" required minlength="3" maxlength="32"><input name="fullName" placeholder="Full name" required><input name="username" placeholder="Username" required minlength="3"><input name="password" type="password" placeholder="Password (10+ characters)" minlength="10" required><button class="button">Sign up</button></form><p id="msg" role="status"></p><a href="/staff-login.html">Back to login</a></div></main><script>document.querySelector('#form').onsubmit=async e=>{e.preventDefault();const body=Object.fromEntries(new FormData(e.target));try{const r=await fetch('/api/staff/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();document.querySelector('#msg').textContent=d.message||d.error||'Request failed.';}catch{document.querySelector('#msg').textContent='Network error.';}};</script></html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Staff signup · MediQueue</title><link rel="stylesheet" href="auth.css"></head>
+<body><main class="auth-card"><h1>Create staff account</h1><p>Use your unique college ID. Administrator approval is required.</p>
+<form id="form"><label>College ID<input name="staffId" autocomplete="off" required minlength="3" maxlength="32"></label>
+<label>Full name<input name="fullName" autocomplete="name" required></label>
+<label>Username<input name="username" autocomplete="username" required minlength="3"></label>
+<label>Password<input name="password" type="password" autocomplete="new-password" placeholder="At least 10 characters" minlength="10" required></label>
+<button type="submit">Sign up</button></form><p id="msg" role="status"></p><p><a href="/staff-login.html">Back to login</a></p></main>
 <script>
-document.querySelectorAll('input[type="password"]').forEach(input => {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "password-toggle";
-  button.textContent = "👁";
-  button.setAttribute("aria-label", "Show password");
-
-  input.insertAdjacentElement("afterend", button);
-
-  button.addEventListener("click", () => {
-    const show = input.type === "password";
-    input.type = show ? "text" : "password";
-    button.setAttribute(
-      "aria-label",
-      show ? "Hide password" : "Show password"
-    );
-    button.textContent = show ? "🙈" : "👁";
-  });
-});
-</script>
+document.querySelector('#form').addEventListener('submit',async e=>{e.preventDefault();const button=e.target.querySelector('button[type="submit"]');button.disabled=true;const body=Object.fromEntries(new FormData(e.target));try{const r=await fetch('/api/staff/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();document.querySelector('#msg').textContent=d.message||d.error||'Request failed.';}catch{document.querySelector('#msg').textContent='Network error.';}finally{button.disabled=false;}});
+document.querySelectorAll('input[type="password"]').forEach(input=>{const button=document.createElement('button');button.type='button';button.className='password-toggle';button.textContent='Show password';input.insertAdjacentElement('afterend',button);button.addEventListener('click',()=>{const show=input.type==='password';input.type=show?'text':'password';button.textContent=show?'Hide password':'Show password';});});
+</script></body></html>

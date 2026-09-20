@@ -432,13 +432,14 @@ async function loadData() {
 document.body.classList.remove("dashboard-loading");
 document.documentElement.classList.remove("mq-brand-loading");
 document.documentElement.classList.add("mq-brand-ready");
-document.body.classList.remove("dashboard-loading");
 
 return data;
 
     } catch (error) {
-    // Show the page even if loading fails
+    // Reveal the error state if the initial request fails.
     document.body.classList.remove("dashboard-loading");
+    document.documentElement.classList.remove("mq-brand-loading");
+    document.documentElement.classList.add("mq-brand-ready");
 
         console.error(
             "Unable to load MediQueue:",
@@ -4039,7 +4040,6 @@ function showPatientLanguageScreen() {
         document.documentElement.lang = savedLanguage;
         translatePatientPortal();
     }
-    document.body.classList.remove("dashboard-loading");
 }
 if (
     document.readyState ===

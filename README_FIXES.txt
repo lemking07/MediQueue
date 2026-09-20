@@ -1,0 +1,1 @@
+Copy the public/ files into the public folder of your MAIN MediQueue project. Back up originals first. This patch repairs premature dashboard reveal, staff auth mobile layout and malformed signup markup. It does not reset passwords or change the database. Test locally before deploying. Do not upload your database or .env to GitHub.

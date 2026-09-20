@@ -633,16 +633,34 @@ async function loadStaffDashboard() {
 
 renderAll();
 
-// Show dashboard after saved branding is applied
+// On the first load, wait until the saved custom logo is decoded before revealing.
+// Avoid displaying the built-in placeholder while the logo image is still loading.
+if (document.documentElement.classList.contains("mq-brand-loading")) {
+    const logos = ["dashboard-custom-logo", "sidebar-custom-logo"]
+        .map(id => document.getElementById(id))
+        .filter(img => img && img.style.display !== "none" && img.getAttribute("src"));
+    await Promise.all(logos.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+            img.addEventListener("load", resolve, { once: true });
+            img.addEventListener("error", resolve, { once: true });
+        });
+    }));
+}
+
+// Show dashboard after saved branding and logo are applied.
 document.body.classList.remove("dashboard-loading");
 document.documentElement.classList.remove("mq-brand-loading");
 document.documentElement.classList.add("mq-brand-ready");
-document.body.classList.remove("dashboard-loading");
 
 return data;
 
     } catch (error) {
+        // An expired session redirects to login; never reveal an unbranded dashboard mid-redirect.
+        if (String(error.message || "").includes("Staff login required")) return null;
         document.body.classList.remove("dashboard-loading");
+        document.documentElement.classList.remove("mq-brand-loading");
+        document.documentElement.classList.add("mq-brand-ready");
 
         console.error(
             "Unable to load MediQueue dashboard:",

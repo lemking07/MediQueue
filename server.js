@@ -1085,8 +1085,9 @@ app.post('/api/staff/signup',async(req,res)=>{
  }catch(e){res.status(409).json({error:'College ID or username already registered.'});}
 });
 app.post('/api/staff/login',async(req,res)=>{
- try {const {username,password}=req.body||{};const account=patientDb.prepare('SELECT * FROM staff_accounts WHERE username=? OR staff_id=?').get(username,username);
+ try {const {username,password,loginRole}=req.body||{};if(loginRole!==undefined&&!['staff','admin'].includes(loginRole))return res.status(400).json({error:'Invalid login type.'});const account=patientDb.prepare('SELECT * FROM staff_accounts WHERE username=? OR staff_id=?').get(username,username);
  if(!account||typeof password!=='string'||!(await staffVerify(password,account.password_hash)))return res.status(401).json({error:'Invalid login details.'});
+ if(loginRole&&account.role!==loginRole)return res.status(403).json({error:loginRole==='admin'?'This account does not have administrator access.':'Use Admin Login for this account.'});
  if(!account.approved)return res.status(403).json({error:'Your account is awaiting administrator approval.'});
  req.session.regenerate(error=>{if(error)return res.status(500).json({error:'Unable to create session.'});req.session.staffLoggedIn=true;req.session.staffUsername=account.username;req.session.staffId=account.id;req.session.staffRole=account.role;req.session.save(err=>{if(err)return res.status(500).json({error:'Unable to save session.'});staffLog(account.id,'login');res.json({success:true});});});
  }catch(e){res.status(500).json({error:'Login failed.'});}
