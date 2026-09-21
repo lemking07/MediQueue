@@ -8,3 +8,5 @@ button{background:var(--account-primary);color:var(--account-button-text);border
 .account-switch{text-align:center;font-size:.93rem;margin:20px 0 0}.text-link{background:none;color:var(--account-primary);padding:2px 4px;text-decoration:underline;border-radius:3px;font-weight:600}
 article{padding:16px;border:1px solid var(--account-secondary);border-radius:12px;margin:12px 0}article h2{font-size:1.1rem}article p{margin:8px 0}a{color:var(--account-primary)}[hidden]{display:none!important}
 @media(max-width:480px){body{padding:16px}main{padding:24px}}
+
+#accountBrandLogo{display:block;max-width:100%;width:auto;max-height:72px;object-fit:contain;margin:0 auto 16px}#accountBrandLogo[hidden]{display:none!important}

@@ -1,0 +1,8 @@
+Phase 4 Appointment Booking
+1. Back up the entire project including database.
+2. Replace outer server.js and copy public/ files into outer public/.
+3. Do not replace .env, database, data, node_modules.
+4. Restart npm start.
+5. Patient: /patient-appointments.html ; Staff: /staff-appointments.html
+6. Staff creates slots, patient books, staff confirms/cancels. Booking does not automatically issue queue tickets.
+7. Test locally before GitHub/Render deployment.

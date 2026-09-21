@@ -1,7 +1,11 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head>
+<style>html:not(.mq-theme-ready) body{visibility:hidden!important}</style>
+<meta name="theme-color" content="#7047e8"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Staff signup · MediQueue</title><link rel="stylesheet" href="auth.css"></head>
-<body><main class="auth-card"><h1>Create staff account</h1><p>Use your unique college ID. Administrator approval is required.</p>
+<body><main class="auth-card">
+<img id="accountBrandLogo" alt="Hospital logo" hidden>
+<p id="brandName">MediQueue</p><h1>Create staff account</h1><p>Use your unique college ID. Administrator approval is required.</p>
 <form id="form"><label>College ID<input name="staffId" autocomplete="off" required minlength="3" maxlength="32"></label>
 <label>Full name<input name="fullName" autocomplete="name" required></label>
 <label>Username<input name="username" autocomplete="username" required minlength="3"></label>
@@ -10,4 +14,4 @@
 <script>
 document.querySelector('#form').addEventListener('submit',async e=>{e.preventDefault();const button=e.target.querySelector('button[type="submit"]');button.disabled=true;const body=Object.fromEntries(new FormData(e.target));try{const r=await fetch('/api/staff/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();document.querySelector('#msg').textContent=d.message||d.error||'Request failed.';}catch{document.querySelector('#msg').textContent='Network error.';}finally{button.disabled=false;}});
 document.querySelectorAll('input[type="password"]').forEach(input=>{const button=document.createElement('button');button.type='button';button.className='password-toggle';button.textContent='Show password';input.insertAdjacentElement('afterend',button);button.addEventListener('click',()=>{const show=input.type==='password';input.type=show?'text':'password';button.textContent=show?'Hide password':'Show password';});});
-</script></body></html>
+</script><script src="account-theme.js"></script></body></html>

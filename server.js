@@ -4,6 +4,7 @@
 // Advanced Patient Portal Designer
 // ======================================================
 
+require("node:process").loadEnvFile();
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -83,17 +84,46 @@ const staffHash = async password => { const salt=crypto.randomBytes(16).toString
 const staffVerify = async (password,stored) => { const [salt,hex]=String(stored).split(':'); if(!salt||!hex||hex.length!==128)return false; const hash=await scrypt(password,salt,64); return crypto.timingSafeEqual(hash,Buffer.from(hex,'hex')); };
 function staffLog(id,action,details='') { if(id)patientDb.prepare('INSERT INTO staff_actions (staff_id,action,details,happened_at) VALUES (?,?,?,?)').run(id,action,details,isoNow()); }
 function closeShift(id) { const row=patientDb.prepare('SELECT id FROM staff_shifts WHERE staff_id=? AND clock_out IS NULL ORDER BY id DESC LIMIT 1').get(id); if(row)patientDb.prepare('UPDATE staff_shifts SET clock_out=? WHERE id=?').run(isoNow(),row.id); }
-async function seedAdmin(){
- const staffId=process.env.ADMIN_STAFF_ID, password=process.env.ADMIN_PASSWORD;
- if(!staffId||!password){ console.warn('Set ADMIN_STAFF_ID and ADMIN_PASSWORD to create the initial administrator.');return; }
- if(password.length<12)throw new Error('ADMIN_PASSWORD must have at least 12 characters');
- if(!patientDb.prepare("SELECT id FROM staff_accounts WHERE role='admin' LIMIT 1").get()){
- patientDb.prepare("INSERT INTO staff_accounts (staff_id,full_name,username,password_hash,role,approved) VALUES (?,?,?,?, 'admin',1)").run(staffId,'Administrator',process.env.ADMIN_USERNAME||'admin',await staffHash(password));
- console.log('Administrator account created.');
- }
-}
-seedAdmin().catch(e=>console.error('Administrator setup:',e.message));
+async function seedAdmin() {
+  const staffId = process.env.ADMIN_STAFF_ID;
+  const username = process.env.ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD;
 
+  if (!staffId || !username || !password) {
+    console.warn("Admin environment variables are missing.");
+    return;
+  }
+
+  if (password.length < 12) {
+    throw new Error("ADMIN_PASSWORD must contain at least 12 characters.");
+  }
+
+  const admin = patientDb.prepare(
+    "SELECT id FROM staff_accounts WHERE role = 'admin' LIMIT 1"
+  ).get();
+
+  if (admin) {
+    patientDb.prepare(
+      `UPDATE staff_accounts
+       SET staff_id = ?, username = ?, password_hash = ?, approved = 1
+       WHERE id = ? AND role = 'admin'`
+    ).run(staffId, username, await staffHash(password), admin.id);
+
+    console.log("Administrator credentials updated.");
+  } else {
+    patientDb.prepare(
+      `INSERT INTO staff_accounts
+       (staff_id, full_name, username, password_hash, role, approved)
+       VALUES (?, 'Administrator', ?, ?, 'admin', 1)`
+    ).run(staffId, username, await staffHash(password));
+
+    console.log("Administrator account created.");
+  }
+}
+
+seedAdmin().catch(error => {
+  console.error("Administrator setup:", error.message);
+});
 // ======================================================
 // DEFAULT PATIENT PORTAL SETTINGS
 // ======================================================
@@ -964,7 +994,8 @@ function requireStaffLogin(
         true
     ) {
 
-        return next();
+        const account=patientDb.prepare('SELECT role,approved FROM staff_accounts WHERE id=?').get(req.session.staffId);
+        if(account?.approved && account.role===req.session.staffRole)return next();
     }
 
 
@@ -1063,6 +1094,13 @@ app.get("/patient.html",(req,res) => {
     if (!req.session?.patientId) return res.redirect("/patient-login.html");
     res.sendFile(path.join(__dirname,"public","patient.html"));
 });
+app.get('/admin.html', (req,res) => {
+  if (!req.session?.staffLoggedIn) return res.redirect('/staff-login.html');
+  if (req.session.staffRole !== 'admin') return res.status(403).send('Administrator only.');
+  res.set('Cache-Control','no-store');
+  res.sendFile(path.join(__dirname,'public','admin.html'));
+});
+
 app.use(
     express.static(
         path.join(
@@ -1110,6 +1148,22 @@ app.post('/api/staff/clock-out',requireStaffLogin,(req,res)=>{
  const id=req.session.staffId;if(!patientDb.prepare('SELECT id FROM staff_shifts WHERE staff_id=? AND clock_out IS NULL').get(id))return res.status(409).json({error:'Not clocked in.'});
  closeShift(id);staffLog(id,'clock_out');res.json({success:true});
 });
+// V5 phase 1: administrator-only overview; no patient-identifying information.
+app.get('/api/admin/overview', requireStaffLogin, (req, res) => {
+  if (req.session.staffRole !== 'admin') return res.status(403).json({error:'Administrator only.'});
+  const data = readData();
+  const departments = data.departments.map(d => ({
+    id:d.id, name:d.name, open:Boolean(d.open),
+    waiting:Array.isArray(d.waiting)?d.waiting.length:0,
+    serving:Array.isArray(d.rooms)?d.rooms.filter(r=>Boolean(r.currentQueue)).length:0,
+    rooms:Array.isArray(d.rooms)?d.rooms.length:0
+  }));
+  const staff = patientDb.prepare("SELECT COUNT(*) AS total, SUM(CASE WHEN approved=0 THEN 1 ELSE 0 END) AS pending FROM staff_accounts WHERE role='staff'").get();
+  res.set('Cache-Control','no-store');
+  res.json({departments, staff:{total:staff.total,pending:staff.pending||0},
+    waiting:departments.reduce((n,d)=>n+d.waiting,0),
+    serving:departments.reduce((n,d)=>n+d.serving,0)});
+});
 // Administrative account management: server-side role checks on every endpoint.
 const requireAdmin=(req,res,next)=>req.session.staffRole==='admin'?next():res.status(403).json({error:'Administrator only.'});
 app.get('/api/staff/accounts',requireStaffLogin,requireAdmin,(req,res)=>{
@@ -1130,6 +1184,61 @@ app.get('/api/staff/work-report',requireStaffLogin,(req,res)=>{
  const shifts=admin?patientDb.prepare('SELECT s.*,a.staff_id AS college_id,a.full_name FROM staff_shifts s JOIN staff_accounts a ON a.id=s.staff_id ORDER BY s.id DESC LIMIT 500').all():patientDb.prepare('SELECT * FROM staff_shifts WHERE staff_id=? ORDER BY id DESC LIMIT 100').all(id);
  const actions=admin?patientDb.prepare('SELECT l.*,a.staff_id AS college_id,a.full_name FROM staff_actions l JOIN staff_accounts a ON a.id=l.staff_id ORDER BY l.id DESC LIMIT 500').all():patientDb.prepare('SELECT * FROM staff_actions WHERE staff_id=? ORDER BY id DESC LIMIT 100').all(id);
  res.json({shifts,actions,serverTime:isoNow()});
+});
+// V5 Phase 2: department permissions. Existing staff are unassigned until an admin grants access.
+patientDb.exec(`CREATE TABLE IF NOT EXISTS staff_department_permissions (
+ staff_account_id INTEGER NOT NULL,
+ department_id INTEGER NOT NULL,
+ PRIMARY KEY(staff_account_id,department_id),
+ FOREIGN KEY(staff_account_id) REFERENCES staff_accounts(id) ON DELETE CASCADE
+);`);
+function allowedDepartment(staffId, departmentId) {
+ return Boolean(patientDb.prepare('SELECT 1 FROM staff_department_permissions WHERE staff_account_id=? AND department_id=?').get(staffId,departmentId));
+}
+app.get('/api/staff/permissions/me',requireStaffLogin,(req,res)=>{
+ const admin=req.session.staffRole==='admin';
+ const departmentIds=admin?readData().departments.map(d=>d.id):patientDb.prepare('SELECT department_id FROM staff_department_permissions WHERE staff_account_id=? ORDER BY department_id').all(req.session.staffId).map(row=>row.department_id);
+ res.set('Cache-Control','no-store').json({role:req.session.staffRole,departmentIds});
+});
+app.get('/api/admin/staff-permissions',requireStaffLogin,requireAdmin,(req,res)=>{
+ const staff=patientDb.prepare("SELECT id,staff_id,full_name,username,approved FROM staff_accounts WHERE role='staff' ORDER BY full_name").all();
+ const permissions=patientDb.prepare('SELECT staff_account_id,department_id FROM staff_department_permissions ORDER BY department_id').all();
+ res.set('Cache-Control','no-store').json({staff:staff.map(a=>({...a,departmentIds:permissions.filter(p=>p.staff_account_id===a.id).map(p=>p.department_id)})),departments:readData().departments.map(d=>({id:d.id,name:d.name}))});
+});
+app.put('/api/admin/staff-permissions/:id',requireStaffLogin,requireAdmin,(req,res)=>{
+ const id=Number(req.params.id), ids=req.body?.departmentIds;
+ if(!Number.isSafeInteger(id)||id<1||!Array.isArray(ids)||ids.length>100||ids.some(v=>!Number.isSafeInteger(v)||v<1)||new Set(ids).size!==ids.length)return res.status(400).json({error:'Invalid staff or department list.'});
+ const staff=patientDb.prepare("SELECT id FROM staff_accounts WHERE id=? AND role='staff'").get(id);
+ if(!staff)return res.status(404).json({error:'Staff account not found.'});
+ const valid=new Set(readData().departments.map(d=>d.id));
+ if(ids.some(v=>!valid.has(v)))return res.status(400).json({error:'Department not found.'});
+ patientDb.exec('BEGIN IMMEDIATE');
+ try{
+  patientDb.prepare('DELETE FROM staff_department_permissions WHERE staff_account_id=?').run(id);
+  const insert=patientDb.prepare('INSERT INTO staff_department_permissions(staff_account_id,department_id) VALUES(?,?)');
+  ids.forEach(deptId=>insert.run(id,deptId));
+  patientDb.exec('COMMIT');
+ }catch(e){patientDb.exec('ROLLBACK');return res.status(500).json({error:'Unable to save permissions.'});}
+ staffLog(req.session.staffId,'update_staff_permissions',String(id));
+ res.json({success:true,departmentIds:ids});
+});
+// Enforce permissions before all existing mutation handlers; UI hiding alone is insufficient.
+app.use((req,res,next)=>{
+ if(!/^(POST|PUT|PATCH|DELETE)$/.test(req.method))return next();
+ const queueAction=/^\/api\/queue\/(call-next|assign|recall|complete|reset)$/.test(req.path);
+ const departmentAction=/^\/api\/staff\/departments(?:\/|$)/.test(req.path);
+ const settingsAction=/^\/api\/staff\/portal-settings(?:\/|$)/.test(req.path);
+ if(!queueAction&&!departmentAction&&!settingsAction)return next();
+ if(!req.session?.staffLoggedIn)return res.status(401).json({error:'Staff login required.'});
+ const account=patientDb.prepare('SELECT role,approved FROM staff_accounts WHERE id=?').get(req.session.staffId);
+ if(!account||!account.approved)return res.status(403).json({error:'Staff account is not approved.'});
+ if(account.role==='admin')return next();
+ if(settingsAction||req.path==='/api/staff/departments')return res.status(403).json({error:'Administrator access required for system configuration.'});
+ const id=queueAction?Number(req.body?.departmentId):Number(req.path.split('/')[4]);
+ if(!Number.isSafeInteger(id)||id<1||!allowedDepartment(req.session.staffId,id))return res.status(403).json({error:'You are not assigned to this department.'});
+ // Structural changes are administrator-only; assigned staff can update department details and operate queues.
+ if(departmentAction && (req.method==='DELETE'||/\/rooms(?:\/|$)|\/logo$/.test(req.path)))return res.status(403).json({error:'Administrator access required to change department structure.'});
+ next();
 });
 // Audit successful staff operations; only record action identifiers, never patient names or passwords.
 app.use((req,res,next)=>{
@@ -1324,10 +1433,106 @@ app.get("/api/patient/me",requirePatient,(req,res) => {
     if(!patient) return res.status(401).json({error:"Session expired."});
     res.json(patient);
 });
+// V5 Phase 3: self-service patient profile. All queries are scoped to the session patient ID.
+app.patch('/api/patient/profile',requirePatient,(req,res)=>{
+ const fullName=typeof req.body?.fullName==='string'?req.body.fullName.trim():'';
+ if(fullName.length<2||fullName.length>100||/[\x00-\x1f\x7f]/.test(fullName))return res.status(400).json({error:'Name must contain 2–100 valid characters.'});
+ const result=patientDb.prepare('UPDATE patients SET full_name=? WHERE id=?').run(fullName,req.session.patientId);
+ if(!result.changes)return res.status(401).json({error:'Account not found.'});
+ res.set('Cache-Control','no-store').json({success:true,fullName});
+});
+app.post('/api/patient/change-password',requirePatient,async(req,res)=>{
+ const current=req.body?.currentPassword,newPassword=req.body?.newPassword;
+ if(typeof current!=='string'||typeof newPassword!=='string'||newPassword.length<10||newPassword.length>128||current.length>128)return res.status(400).json({error:'Provide your current password and a new password of 10–128 characters.'});
+ if(current===newPassword)return res.status(400).json({error:'Choose a different new password.'});
+ const account=patientDb.prepare('SELECT password_hash FROM patients WHERE id=?').get(req.session.patientId);
+ if(!account)return res.status(401).json({error:'Account not found.'});
+ const [salt,hex]=String(account.password_hash).split(':');
+ if(!salt||!/^[a-f0-9]{128}$/i.test(hex))return res.status(500).json({error:'Password verification unavailable.'});
+ const calculated=await scrypt(current,salt,64);
+ if(!crypto.timingSafeEqual(calculated,Buffer.from(hex,'hex')))return res.status(403).json({error:'Current password is incorrect.'});
+ const newSalt=crypto.randomBytes(16).toString('hex');
+ const newHash=(await scrypt(newPassword,newSalt,64)).toString('hex');
+ patientDb.prepare('UPDATE patients SET password_hash=? WHERE id=?').run(newSalt+':'+newHash,req.session.patientId);
+ res.set('Cache-Control','no-store').json({success:true});
+});
 app.get("/api/patient/history",requirePatient,(req,res) => {
     res.json(patientDb.prepare("SELECT id,department_name,queue_number,room_number,queue_issued_at,called_at,completed_at,status FROM visits WHERE patient_id=? ORDER BY id DESC LIMIT 100").all(req.session.patientId));
 });
 app.post("/api/patient/logout",requirePatient,(req,res) => req.session.destroy(error => error ? res.status(500).json({error:"Unable to log out."}) : res.clearCookie("connect.sid").json({success:true})));
+
+// V5 Phase 4: appointments. Appointment slots are administrative schedules, not queue tickets.
+patientDb.exec(`CREATE TABLE IF NOT EXISTS appointment_slots (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, department_id INTEGER NOT NULL, appointment_date TEXT NOT NULL,
+ appointment_time TEXT NOT NULL, capacity INTEGER NOT NULL CHECK(capacity BETWEEN 1 AND 100),
+ created_by INTEGER NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ UNIQUE(department_id,appointment_date,appointment_time));
+CREATE TABLE IF NOT EXISTS appointments (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, slot_id INTEGER NOT NULL REFERENCES appointment_slots(id),
+ patient_id INTEGER NOT NULL REFERENCES patients(id), status TEXT NOT NULL DEFAULT 'pending'
+ CHECK(status IN ('pending','confirmed','cancelled')),
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX IF NOT EXISTS appointment_patient_idx ON appointments(patient_id,created_at);
+CREATE INDEX IF NOT EXISTS appointment_slot_idx ON appointments(slot_id,status);`);
+const appointmentDateValid = value => typeof value==='string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value+'T00:00:00Z')) && new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
+const appointmentTimeValid = value => typeof value==='string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+const appointmentToday = () => new Intl.DateTimeFormat('en-CA',{timeZone:process.env.APPOINTMENT_TIMEZONE||'Asia/Kuala_Lumpur',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const appointmentDepartments = () => readData().departments.map(d=>({id:d.id,name:d.name}));
+const appointmentSelect = `SELECT a.id,a.status,a.created_at,a.updated_at,s.id AS slot_id,s.department_id,s.appointment_date,s.appointment_time,p.full_name AS patient_name,p.username AS patient_username
+ FROM appointments a JOIN appointment_slots s ON s.id=a.slot_id JOIN patients p ON p.id=a.patient_id`;
+app.get('/api/appointments/departments',requirePatient,(req,res)=>res.set('Cache-Control','no-store').json(appointmentDepartments()));
+app.get('/api/appointments/slots',requirePatient,(req,res)=>{
+ const date=req.query.date,departmentId=Number(req.query.departmentId);
+ if(!appointmentDateValid(date)||date<appointmentToday()||!Number.isSafeInteger(departmentId)||!appointmentDepartments().some(d=>d.id===departmentId))return res.status(400).json({error:'Choose a valid department and a current or future date.'});
+ const slots=patientDb.prepare(`SELECT s.id,s.department_id,s.appointment_date,s.appointment_time,s.capacity, s.capacity-(SELECT COUNT(*) FROM appointments a WHERE a.slot_id=s.id AND a.status IN ('pending','confirmed')) AS available FROM appointment_slots s WHERE s.department_id=? AND s.appointment_date=? ORDER BY s.appointment_time`).all(departmentId,date);
+ res.set('Cache-Control','no-store').json(slots.filter(s=>date>appointmentToday()||s.appointment_time>new Intl.DateTimeFormat('en-GB',{timeZone:process.env.APPOINTMENT_TIMEZONE||'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date())));
+});
+app.get('/api/appointments/mine',requirePatient,(req,res)=>res.set('Cache-Control','no-store').json(patientDb.prepare(appointmentSelect+' WHERE a.patient_id=? ORDER BY s.appointment_date DESC,s.appointment_time DESC LIMIT 100').all(req.session.patientId).map(a=>({...a,department_name:appointmentDepartments().find(d=>d.id===a.department_id)?.name||'Department unavailable'}))));
+app.post('/api/appointments/book',requirePatient,(req,res)=>{
+ const slotId=Number(req.body?.slotId);
+ if(!Number.isSafeInteger(slotId)||slotId<1)return res.status(400).json({error:'Choose a valid slot.'});
+ try{
+ patientDb.exec('BEGIN IMMEDIATE');
+ const slot=patientDb.prepare('SELECT * FROM appointment_slots WHERE id=?').get(slotId);
+ const nowTime=new Intl.DateTimeFormat('en-GB',{timeZone:process.env.APPOINTMENT_TIMEZONE||'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());
+ if(!slot||!appointmentDepartments().some(d=>d.id===slot.department_id)||slot.appointment_date<appointmentToday()||(slot.appointment_date===appointmentToday()&&slot.appointment_time<=nowTime)){patientDb.exec('ROLLBACK');return res.status(400).json({error:'This slot is no longer available.'});}
+ const existing=patientDb.prepare(`SELECT 1 FROM appointments a JOIN appointment_slots s ON s.id=a.slot_id WHERE a.patient_id=? AND s.appointment_date=? AND s.appointment_time=? AND a.status IN ('pending','confirmed')`).get(req.session.patientId,slot.appointment_date,slot.appointment_time);
+ const used=patientDb.prepare("SELECT COUNT(*) AS n FROM appointments WHERE slot_id=? AND status IN ('pending','confirmed')").get(slotId).n;
+ if(existing||used>=slot.capacity){patientDb.exec('ROLLBACK');return res.status(409).json({error:existing?'You already have an appointment at this time.':'This slot is fully booked.'});}
+ const result=patientDb.prepare('INSERT INTO appointments(slot_id,patient_id) VALUES(?,?)').run(slotId,req.session.patientId);
+ patientDb.exec('COMMIT');res.status(201).json({success:true,id:Number(result.lastInsertRowid),status:'pending'});
+ }catch(error){try{patientDb.exec('ROLLBACK')}catch{}res.status(500).json({error:'Unable to complete booking.'});}
+});
+app.post('/api/appointments/mine/:id/cancel',requirePatient,(req,res)=>{
+ const id=Number(req.params.id);if(!Number.isSafeInteger(id)||id<1)return res.status(400).json({error:'Invalid appointment.'});
+ const result=patientDb.prepare("UPDATE appointments SET status='cancelled',updated_at=? WHERE id=? AND patient_id=? AND status IN ('pending','confirmed') AND slot_id IN (SELECT id FROM appointment_slots WHERE appointment_date>=?)").run(isoNow(),id,req.session.patientId,appointmentToday());
+ if(!result.changes)return res.status(409).json({error:'Appointment cannot be cancelled.'});res.json({success:true});
+});
+app.get('/api/staff/appointments/slots',requireStaffLogin,(req,res)=>{
+ const departmentId=Number(req.query.departmentId);if(!Number.isSafeInteger(departmentId)||!appointmentDepartments().some(d=>d.id===departmentId))return res.status(400).json({error:'Choose a department.'});
+ if(req.session.staffRole!=='admin'&&!allowedDepartment(req.session.staffId,departmentId))return res.status(403).json({error:'Department not assigned.'});
+ res.set('Cache-Control','no-store').json(patientDb.prepare(`SELECT s.*, (SELECT COUNT(*) FROM appointments a WHERE a.slot_id=s.id AND a.status IN ('pending','confirmed')) AS booked FROM appointment_slots s WHERE department_id=? AND appointment_date>=? ORDER BY appointment_date,appointment_time LIMIT 300`).all(departmentId,appointmentToday()));
+});
+app.post('/api/staff/appointments/slots',requireStaffLogin,(req,res)=>{
+ const departmentId=Number(req.body?.departmentId),date=req.body?.date,time=req.body?.time,capacity=Number(req.body?.capacity);
+ if(!Number.isSafeInteger(departmentId)||!appointmentDepartments().some(d=>d.id===departmentId)||!appointmentDateValid(date)||date<appointmentToday()||!appointmentTimeValid(time)||!Number.isSafeInteger(capacity)||capacity<1||capacity>100)return res.status(400).json({error:'Enter a valid department, future date, time and capacity (1–100).'});
+ if(req.session.staffRole!=='admin'&&!allowedDepartment(req.session.staffId,departmentId))return res.status(403).json({error:'Department not assigned.'});
+ try{const result=patientDb.prepare('INSERT INTO appointment_slots(department_id,appointment_date,appointment_time,capacity,created_by) VALUES(?,?,?,?,?)').run(departmentId,date,time,capacity,req.session.staffId);staffLog(req.session.staffId,'create_appointment_slot',String(result.lastInsertRowid));res.status(201).json({success:true,id:Number(result.lastInsertRowid)});}catch(error){res.status(409).json({error:'A slot already exists at that date and time for this department.'});}
+});
+app.get('/api/staff/appointments',requireStaffLogin,(req,res)=>{
+ const departmentId=Number(req.query.departmentId);if(!Number.isSafeInteger(departmentId)||!appointmentDepartments().some(d=>d.id===departmentId))return res.status(400).json({error:'Choose a department.'});
+ if(req.session.staffRole!=='admin'&&!allowedDepartment(req.session.staffId,departmentId))return res.status(403).json({error:'Department not assigned.'});
+ res.set('Cache-Control','no-store').json(patientDb.prepare(appointmentSelect+' WHERE s.department_id=? AND s.appointment_date>=? ORDER BY s.appointment_date,s.appointment_time,a.id LIMIT 300').all(departmentId,appointmentToday()));
+});
+app.patch('/api/staff/appointments/:id',requireStaffLogin,(req,res)=>{
+ const id=Number(req.params.id),status=req.body?.status;
+ if(!Number.isSafeInteger(id)||id<1||!['confirmed','cancelled'].includes(status))return res.status(400).json({error:'Invalid appointment or status.'});
+ const appointment=patientDb.prepare('SELECT a.status,s.department_id,s.appointment_date FROM appointments a JOIN appointment_slots s ON s.id=a.slot_id WHERE a.id=?').get(id);
+ if(!appointment)return res.status(404).json({error:'Appointment not found.'});
+ if(req.session.staffRole!=='admin'&&!allowedDepartment(req.session.staffId,appointment.department_id))return res.status(403).json({error:'Department not assigned.'});
+ if(appointment.status==='cancelled'||appointment.appointment_date<appointmentToday())return res.status(409).json({error:'This appointment cannot be changed.'});
+ patientDb.prepare('UPDATE appointments SET status=?,updated_at=? WHERE id=?').run(status,isoNow(),id);staffLog(req.session.staffId,'appointment_'+status,String(id));res.json({success:true,status});
+});
 
 app.post(
     "/api/queue/take",
