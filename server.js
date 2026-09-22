@@ -4,14 +4,17 @@
 // Advanced Patient Portal Designer
 // ======================================================
 
-require("node:process").loadEnvFile();
+try {
+  require("node:process").loadEnvFile();
+} catch (error) {
+  if (error.code !== "ENOENT") throw error;
+}
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const session = require("express-session");
 const { Server } = require("socket.io");
-
 const crypto = require("node:crypto");
 const { promisify } = require("node:util");
 const { DatabaseSync } = require("node:sqlite");
