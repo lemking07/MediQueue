@@ -5098,8 +5098,9 @@ function applyDashboardCustomization(
 
 
     const backgroundColor =
-        settings.backgroundColor ||
-        "#F3F8F8";
+        (automaticWebsiteTheme
+            ? websiteSettings.backgroundColor
+            : settings.backgroundColor) || "#F3F8F8";
 
 
     // ==========================================
