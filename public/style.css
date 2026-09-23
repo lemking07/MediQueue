@@ -10445,3 +10445,8 @@ body.staff-app-body.website-auto-theme-enabled .customization-launcher-icon {
   width: calc(var(--welcome-frame-size) + 28px);
   height: calc(var(--welcome-frame-size) + 28px);
 }
+
+/* Descendants with visibility:visible cannot bypass a loading parent's opacity. */
+html.mq-brand-loading { background: #f6f5f9; }
+html.mq-brand-loading body { opacity: 0 !important; transition: none !important; }
+html.mq-brand-ready body { opacity: 1; }
