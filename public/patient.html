@@ -746,7 +746,7 @@ document.documentElement.classList.add("mq-brand-loading");
                         </span>
 
                         <span>
-                            Enable Sound & Notifications
+                            Enable Sound & In-page Alerts
                         </span>
 
                     </button>
@@ -947,7 +947,7 @@ document.documentElement.classList.add("mq-brand-loading");
     </div>
 </div>
 
-<script src="patient.js"></script>
+<script src="patient-dialog.js"></script><script src="patient.js"></script>
 <script src="patient-welcome.js" defer></script>
 <script>document.getElementById("mq-logout").addEventListener("click",async()=>{const r=await fetch("/api/patient/logout",{method:"POST"});if(r.ok){localStorage.removeItem("mediqueue_patient_ticket");sessionStorage.removeItem("mediqueue_patient_language");location.href="/patient-login.html";}});</script>
 

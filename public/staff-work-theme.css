@@ -1,0 +1,15 @@
+/* Staff workspace uses the same saved palette as the account and portal pages. */
+:root { --account-primary:#0f9d8a; --account-secondary:#17324d; --account-bg:#f4fbf9; --account-card:#fff; --account-text:#17324d; --account-button-text:#fff; }
+* { box-sizing:border-box; }
+body { margin:0; font:16px/1.55 system-ui,sans-serif; background:var(--account-bg); color:var(--account-text); }
+.mq-work { width:min(100%,1160px); margin:20px auto; padding:20px; }
+.mq-work h1,.mq-work h2,.mq-work h3 { color:var(--account-secondary); }
+.mq-work a { color:var(--account-primary); }
+.mq-work .mq-panel { background:var(--account-card); border-color:color-mix(in srgb,var(--account-primary) 23%,var(--account-card)); box-shadow:0 8px 28px #00000008; }
+.mq-work nav a,.mq-work button { font:inherit; background:color-mix(in srgb,var(--account-primary) 9%,var(--account-card)); color:var(--account-primary); border-color:color-mix(in srgb,var(--account-primary) 30%,var(--account-card)); }
+.mq-work button:not(:disabled):hover,.mq-work nav a:hover { background:var(--account-primary); color:var(--account-button-text); }
+.mq-work .mq-table th { background:color-mix(in srgb,var(--account-primary) 9%,var(--account-card)); color:var(--account-secondary); }
+.mq-work .mq-table th,.mq-work .mq-table td { border-color:color-mix(in srgb,var(--account-primary) 14%,var(--account-card)); }
+.mq-work .mq-muted { color:color-mix(in srgb,var(--account-text) 75%,var(--account-card)); }
+.mq-work :focus-visible { outline:3px solid var(--account-primary); outline-offset:3px; }
+@media(max-width:600px) { .mq-work { padding:12px; } .mq-work .mq-panel { padding:16px; } }

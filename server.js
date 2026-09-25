@@ -61,23 +61,24 @@ app.use(
     })
 );
 
-app.use(
-    session({
-        secret:
-            process.env.SESSION_SECRET ||
-            "mediqueue-secret-key-2026",
-
-        resave: false,
-        saveUninitialized: false,
-
-        cookie: {
-            maxAge: 1000 * 60 * 60 * 8,
-            httpOnly: true,
-            sameSite: "lax"
-        }
-    })
-);
-
+// Independent cookies and stores: changing one role's session leaves the other intact.
+const makeRoleSession = name => session({
+    name,
+    secret: process.env.SESSION_SECRET || "mediqueue-secret-key-2026",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 1000 * 60 * 60 * 8, httpOnly: true, sameSite: "lax" }
+});
+const patientSession = makeRoleSession("mq.patient.sid");
+const staffSession = makeRoleSession("mq.staff.sid");
+app.use((req, res, next) => {
+    const route = req.path.toLowerCase();
+    const patientRoute = route.startsWith("/api/patient/") ||
+        route.startsWith("/api/appointments/") ||
+        /^\/api\/queue\/take\/?$/i.test(req.path) ||
+        /^\/patient(?:-[a-z]+)?\.html$/i.test(req.path);
+    (patientRoute ? patientSession : staffSession)(req, res, next);
+});
 
 // Individual staff accounts. Configure ADMIN_STAFF_ID and ADMIN_PASSWORD before first run.
 patientDb.exec(`CREATE TABLE IF NOT EXISTS staff_accounts (id INTEGER PRIMARY KEY, staff_id TEXT NOT NULL UNIQUE, full_name TEXT NOT NULL, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'staff', approved INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
@@ -1123,7 +1124,7 @@ app.post('/api/staff/signup',async(req,res)=>{
  if(!/^[A-Za-z0-9-]{3,32}$/.test(staffId||'')||!String(fullName||'').trim()||!/^[A-Za-z0-9_.-]{3,32}$/.test(username||'')||typeof password!=='string'||password.length<10)return res.status(400).json({error:'Enter a valid college ID, name, username and password (at least 10 characters).'});
  patientDb.prepare('INSERT INTO staff_accounts (staff_id,full_name,username,password_hash) VALUES (?,?,?,?)').run(staffId,fullName.trim(),username,await staffHash(password));
  res.status(201).json({success:true,message:'Account submitted for administrator approval.'});
- }catch(e){res.status(409).json({error:'College ID or username already registered.'});}
+ }catch(e){if(String(e.code).includes('CONSTRAINT') || /UNIQUE constraint/.test(e.message)) return res.status(409).json({error:'This college ID or username already has a staff account. Use Staff Login, or ask the administrator to check its approval.'}); res.status(500).json({error:'Unable to create staff account. Please try again.'});}
 });
 app.post('/api/staff/login',async(req,res)=>{
  try {const {username,password,loginRole}=req.body||{};if(loginRole!==undefined&&!['staff','admin'].includes(loginRole))return res.status(400).json({error:'Invalid login type.'});const account=patientDb.prepare('SELECT * FROM staff_accounts WHERE username=? OR staff_id=?').get(username,username);
@@ -1314,7 +1315,7 @@ app.post(
 
 
                 res.clearCookie(
-                    "connect.sid"
+                    "mq.staff.sid"
                 );
 
 
@@ -1349,7 +1350,7 @@ app.get(
             () => {
 
                 res.clearCookie(
-                    "connect.sid"
+                    "mq.staff.sid"
                 );
 
 
@@ -1462,7 +1463,7 @@ app.post('/api/patient/change-password',requirePatient,async(req,res)=>{
 app.get("/api/patient/history",requirePatient,(req,res) => {
     res.json(patientDb.prepare("SELECT id,department_name,queue_number,room_number,queue_issued_at,called_at,completed_at,status FROM visits WHERE patient_id=? ORDER BY id DESC LIMIT 100").all(req.session.patientId));
 });
-app.post("/api/patient/logout",requirePatient,(req,res) => req.session.destroy(error => error ? res.status(500).json({error:"Unable to log out."}) : res.clearCookie("connect.sid").json({success:true})));
+app.post("/api/patient/logout",requirePatient,(req,res) => req.session.destroy(error => error ? res.status(500).json({error:"Unable to log out."}) : res.clearCookie("mq.patient.sid").json({success:true})));
 
 // V5 Phase 4: appointments. Appointment slots are administrative schedules, not queue tickets.
 patientDb.exec(`CREATE TABLE IF NOT EXISTS appointment_slots (

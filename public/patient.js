@@ -26,8 +26,6 @@ let latestData = {
 let currentTicket =
     loadSavedTicket();
 
-let notificationEnabled =
-    false;
 
 let audioContext =
     null;
@@ -2614,7 +2612,16 @@ function showCalledStatus(
 // COMPLETED STATUS
 // ======================================================
 
+const completionDialogs = new Set();
 function showCompletedStatus() {
+    if (currentTicket) {
+        const key = JSON.stringify(currentTicket);
+        if (!completionDialogs.has(key)) {
+            completionDialogs.add(key);
+            mqPatientDialog({title: "Checkup completed", message: "Your visit is complete. Thank you for using MediQueue. You can view this visit in My History.", accept: "Got it"});
+        }
+    }
+
 
     if (ticketStatus) {
 
@@ -3101,89 +3108,24 @@ function setConnectionStatus(
 // ======================================================
 
 if (enableSoundButton) {
-
-    enableSoundButton.addEventListener(
-        "click",
-        async () => {
-
-            try {
-
-                await enableAudio();
-
-
-                if (
-                    "Notification" in window
-                ) {
-
-                    if (
-                        Notification.permission ===
-                        "default"
-                    ) {
-
-                        const permission =
-                            await Notification
-                                .requestPermission();
-
-
-                        notificationEnabled =
-                            permission ===
-                            "granted";
-
-                    } else {
-
-                        notificationEnabled =
-                            Notification.permission ===
-                            "granted";
-                    }
-                }
-
-
-                enableSoundButton.innerHTML = `
-                    <span class="button-icon">✓</span>
-                    <span>Sound & Notifications Enabled</span>
-                `;
-
-
-                enableSoundButton.disabled =
-                    true;
-
-
-                await playNotificationSound(
-                    false,
-                    "call"
-                );
-
-
-                if (
-                    navigator.vibrate
-                ) {
-
-                    navigator.vibrate(
-                        100
-                    );
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "Notification setup error:",
-                    error
-                );
-
-
-                enableSoundButton.innerHTML = `
-                    <span class="button-icon">✓</span>
-                    <span>Sound Enabled</span>
-                `;
-
-
-                enableSoundButton.disabled =
-                    true;
-            }
+    enableSoundButton.addEventListener("click", async () => {
+        const accepted = await mqPatientDialog({
+            title: "Enable patient alerts?",
+            message: "Hear a sound and see an in-page alert when your number is called. Keep this page open. No browser notification permission is needed.",
+            accept: "Enable alerts", cancel: "Not now"
+        });
+        if (!accepted) return;
+        try {
+            const context = await enableAudio();
+            if (!context || context.state !== "running") throw new Error("Audio unavailable");
+            await playNotificationSound(false, "call");
+            enableSoundButton.textContent = "Sound & in-page alerts enabled";
+            enableSoundButton.disabled = true;
+        } catch (error) {
+            await mqPatientDialog({title: "In-page alerts are available", message: "Sound could not start. You will still see your queue updates here. Tap Enable alerts again to retry sound."});
         }
-    );
+    });
 }
-
 
 // ======================================================
 // AUDIO CONTEXT
@@ -3602,47 +3544,6 @@ async function notifyPatientCalled(
 
             console.warn(
                 "Vibration unavailable:",
-                error
-            );
-        }
-    }
-
-
-    // --------------------------------------------------
-    // BROWSER NOTIFICATION
-    // --------------------------------------------------
-
-    if (
-        notificationEnabled &&
-        "Notification" in window &&
-        Notification.permission ===
-            "granted"
-    ) {
-
-        try {
-
-            const settings =
-                getPortalSettings();
-
-
-            new Notification(
-                eventType === "recall"
-                    ? `${settings.systemName} - Please Return`
-                    : `${settings.systemName} - Your Number Has Been Called`,
-                {
-                    body:
-                        `${callData.queueNumber} → ${
-                            formatRoomName(
-                                callData.room
-                            )
-                        }`
-                }
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Browser notification error:",
                 error
             );
         }
