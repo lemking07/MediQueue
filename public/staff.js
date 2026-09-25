@@ -7754,6 +7754,15 @@ const DEFAULT_WEBSITE_SECONDARY_COLOR =
 
 let pendingWebsiteLogoDataUrl = "";
 let pendingWebsiteFaviconDataUrl = "";
+let faviconSaveInProgress = false;
+function setFaviconSaving(saving) {
+    faviconSaveInProgress = saving;
+    for (const id of ["website-favicon-input", "website-favicon-upload-button", "website-favicon-reset-button"]) {
+        const element = document.getElementById(id);
+        if (element) element.disabled = saving;
+    }
+}
+
 
 
 
@@ -9044,9 +9053,7 @@ async function saveWebsiteSettings(
                 },
 
                 body:
-                    JSON.stringify(
-                        updatedSettings
-                    )
+                    JSON.stringify(changes)
             }
         );
 
@@ -9222,7 +9229,7 @@ document
         const input = event.target;
         const file = input.files?.[0];
 
-        if (!file) return;
+        if (!file || faviconSaveInProgress) return;
 
         const feedback =
             document.getElementById("website-favicon-feedback");
@@ -9253,6 +9260,7 @@ document
             return;
         }
 
+        setFaviconSaving(true);
         try {
             const faviconDataUrl =
                 await new Promise((resolve, reject) => {
@@ -9281,9 +9289,10 @@ document
                 feedback.textContent = "Saving browser icon...";
             }
 
-            await saveWebsiteSettings({
-                faviconDataUrl
-            });
+            const saved = await saveWebsiteSettings({ faviconDataUrl });
+            if (saved.portalSettings?.faviconDataUrl !== faviconDataUrl) {
+                throw new Error("The server did not confirm this browser icon. Please try again.");
+            }
 
             pendingWebsiteFaviconDataUrl = "";
 
@@ -9308,6 +9317,8 @@ document
             }
 
         } finally {
+            setFaviconSaving(false);
+            renderWebsiteSettings();
             input.value = "";
         }
     });
@@ -9315,6 +9326,7 @@ document
 document
     .getElementById("website-favicon-reset-button")
     ?.addEventListener("click", async () => {
+        if (faviconSaveInProgress) return;
 
         const confirmed = await mqConfirm(
     "Reset the browser icon to its default? Your current custom favicon will be removed.",
@@ -9326,11 +9338,12 @@ document
     }
 );
 
-        if (!confirmed) return;
+        if (!confirmed || faviconSaveInProgress) return;
 
         const feedback =
             document.getElementById("website-favicon-feedback");
 
+        setFaviconSaving(true);
         try {
             pendingWebsiteFaviconDataUrl = "";
 
@@ -9352,6 +9365,9 @@ document
                 feedback.textContent =
                     error.message || "Unable to reset browser icon.";
             }
+        } finally {
+            setFaviconSaving(false);
+            renderWebsiteSettings();
         }
     });
 
