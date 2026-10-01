@@ -1538,10 +1538,30 @@ app.patch('/api/staff/appointments/:id',requireStaffLogin,(req,res)=>{
  patientDb.prepare('UPDATE appointments SET status=?,updated_at=? WHERE id=?').run(status,isoNow(),id);staffLog(req.session.staffId,'appointment_'+status,String(id));res.json({success:true,status});
 });
 
+// The account owns its active visit; browser storage is only a display cache.
+function activePatientTicket(patientId) {
+    const visit = patientDb.prepare("SELECT * FROM visits WHERE patient_id = ? AND status IN ('waiting','called') ORDER BY id ASC LIMIT 1").get(patientId);
+    if (!visit) return null;
+    return { visitId: visit.id, queueNumber: visit.queue_number,
+        departmentId: visit.department_id, departmentName: visit.department_name,
+        createdAt: Date.parse(visit.queue_issued_at), status: visit.status,
+        roomNumber: visit.room_number };
+}
+app.get("/api/patient/active-ticket", requirePatient, (req, res) => {
+    const lastVisit = patientDb.prepare("SELECT id, status FROM visits WHERE patient_id = ? ORDER BY id DESC LIMIT 1").get(req.session.patientId);
+    res.set("Cache-Control", "no-store").json({ticket: activePatientTicket(req.session.patientId), lastVisit: lastVisit || null});
+});
+
 app.post(
     "/api/queue/take",
     requirePatient,
     (req, res) => {
+
+        // Idempotent even for repeated clicks, another device, or a different department.
+        const existing = activePatientTicket(req.session.patientId);
+        if (existing) return res.json({success: true, reused: true, ticket: existing,
+            queueNumber: existing.queueNumber, departmentId: existing.departmentId,
+            department: existing.departmentName});
 
         const {
             departmentId
@@ -1615,6 +1635,8 @@ app.post(
             success: true,
 
             queueNumber,
+            departmentId: department.id,
+            ticket: activePatientTicket(req.session.patientId),
 
             department:
                 department.name,

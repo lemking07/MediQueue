@@ -23,8 +23,21 @@ let latestData = {
     portalSettings: {}
 };
 
-let currentTicket =
-    loadSavedTicket();
+// Never restore an unscoped device ticket belonging to a different account.
+let currentTicket = null;
+let ticketLoadSequence = 0;
+async function restoreAccountTicket() {
+    const response = await fetch("/api/patient/active-ticket", {cache: "no-store"});
+    if (!response.ok) {
+        if (response.status === 401) { currentTicket = null; clearSavedTicket(); }
+        throw new Error("Unable to restore your queue ticket. Please sign in and try again.");
+    }
+    const {ticket, lastVisit} = await response.json();
+    if (!ticket && currentTicket) {
+        currentTicket.status = lastVisit?.id === currentTicket.visitId ? lastVisit.status : "cancelled";
+    }
+    return ticket;
+}
 
 
 let audioContext =
@@ -383,8 +396,13 @@ function getPortalSettings() {
 // ======================================================
 
 async function loadData() {
-
+    const sequence = ++ticketLoadSequence;
     try {
+        const accountTicket = await restoreAccountTicket();
+        if (sequence !== ticketLoadSequence) return;
+        if (accountTicket) currentTicket = accountTicket;
+
+
 
         const response =
             await fetch(
@@ -408,6 +426,7 @@ async function loadData() {
             await response.json();
 
 
+        if (sequence !== ticketLoadSequence) return;
         latestData =
             data;
 
@@ -1900,20 +1919,6 @@ async function takeQueueNumber(
     departmentId
 ) {
 
-    if (currentTicket) {
-
-        const confirmed =
-    await mqConfirm(
-        "You already have a queue number on this device. Take a new queue number?"
-    );
-
-
-        if (!confirmed) {
-            return;
-        }
-    }
-
-
     try {
 
         disableDepartmentButtons(
@@ -1956,14 +1961,14 @@ async function takeQueueNumber(
         }
 
 
-        currentTicket = {
+        currentTicket = result.ticket || {
 
             queueNumber:
                 result.queueNumber,
 
             departmentId:
                 Number(
-                    departmentId
+                    result.departmentId || departmentId
                 ),
 
             departmentName:
@@ -2171,7 +2176,10 @@ function updateCurrentTicket(
 
 
     resetTicketPanels();
-
+    // A reset may reuse a displayed queue number for another patient.
+    // Terminal account status takes precedence over matching that number.
+    if (currentTicket.status === "completed") { showCompletedStatus(); return; }
+    if (currentTicket.status === "cancelled") { showTicketUnavailable(); return; }
 
     // --------------------------------------------------
     // CHECK IF PATIENT IS CURRENTLY IN A ROOM
@@ -2789,70 +2797,27 @@ function formatRoomName(
 // ======================================================
 
 if (newQueueButton) {
-
-    newQueueButton.addEventListener(
-        "click",
-        async () => {
-
-            const confirmed =
-    await mqConfirm(
-        "Return to department selection? Your saved queue ticket on this device will be cleared."
-    );
-
-
-            if (!confirmed) {
+    newQueueButton.addEventListener("click", async () => {
+        try {
+            const active = await restoreAccountTicket();
+            if (active) {
+                currentTicket = active;
+                await loadData();
+                scrollToTicket();
+                showToast("Your queue number stays active until staff complete or cancel it.", "info");
                 return;
             }
-
-
+            currentTicket = null;
             clearSavedTicket();
-
-
-            currentTicket =
-                null;
-
-
-            lastCalledSignature =
-                "";
-
-
-            if (enableSoundButton) {
-
-                enableSoundButton.style.display =
-                    "";
-            }
-
-
+            lastCalledSignature = "";
             showDepartmentSelection();
-
-
-            renderDepartments(
-                latestData.departments || []
-            );
-
-
-            try {
-
-                departmentSection
-                    ?.scrollIntoView({
-                        behavior:
-                            "smooth",
-
-                        block:
-                            "start"
-                    });
-
-            } catch (error) {
-
-                window.scrollTo(
-                    0,
-                    0
-                );
-            }
+            renderDepartments(latestData.departments || []);
+            departmentSection?.scrollIntoView({behavior: "smooth", block: "start"});
+        } catch (error) {
+            showToast("Unable to check your ticket. Please try again.", "error");
         }
-    );
+    });
 }
-
 
 // ======================================================
 // LOCAL STORAGE
@@ -3659,34 +3624,7 @@ if (socket) {
     // LIVE QUEUE / DESIGN UPDATE
     // --------------------------------------------------
 
-    socket.on(
-        "queue:update",
-        data => {
-
-            if (!data) {
-                return;
-            }
-
-
-            latestData =
-                data;
-
-
-            renderPortalSettings(
-                data.portalSettings || {}
-            );
-
-
-            renderDepartments(
-                data.departments || []
-            );
-
-
-            updateCurrentTicket(
-                data
-            );
-        }
-    );
+    socket.on("queue:update", () => { loadData(); });
 
 
     // --------------------------------------------------
