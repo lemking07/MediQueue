@@ -3076,7 +3076,7 @@ if (enableSoundButton) {
     enableSoundButton.addEventListener("click", async () => {
         const accepted = await mqPatientDialog({
             title: "Enable patient alerts?",
-            message: "Hear a sound and see an in-page alert when your number is called. Keep this page open. No browser notification permission is needed.",
+            message: "Hear a stronger sound, feel vibration on supported phones, and see a calling popup. For alerts while this page is in the background, also enable phone notifications.",
             accept: "Enable alerts", cancel: "Not now"
         });
         if (!accepted) return;
@@ -3084,6 +3084,7 @@ if (enableSoundButton) {
             const context = await enableAudio();
             if (!context || context.state !== "running") throw new Error("Audio unavailable");
             await playNotificationSound(false, "call");
+            if (navigator.vibrate) navigator.vibrate([300,150,300]);
             enableSoundButton.textContent = "Sound & in-page alerts enabled";
             enableSoundButton.disabled = true;
         } catch (error) {
@@ -3184,7 +3185,7 @@ function createPatientTone(
 
     gain.gain.exponentialRampToValueAtTime(
         Math.max(
-            volume,
+            Math.min(volume * 2.5, 0.4),
             0.001
         ),
         startTime + 0.02
@@ -3440,6 +3441,7 @@ async function notifyPatientCalled(
     if (
         !currentTicket ||
         !callData ||
+        Number(callData.departmentId) !== Number(currentTicket.departmentId) ||
         callData.queueNumber !==
             currentTicket.queueNumber
     ) {

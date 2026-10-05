@@ -4,12 +4,20 @@
   "description": "Hospital Queue Web System",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "migrate:turso": "node scripts/migrate-turso.js",
+    "check:database": "node scripts/check-database.js",
+    "test": "node scripts/test-storage.js && node scripts/test-import.js && node scripts/test-push.js"
   },
   "dependencies": {
+    "@libsql/client": "0.18.0",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "qrcode": "^1.5.4",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "web-push": "^3.6.7"
+  },
+  "engines": {
+    "node": ">=22.16.0"
   }
 }
