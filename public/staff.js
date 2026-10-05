@@ -278,7 +278,7 @@ async function staffFetch(
     if (response.status === 401) {
 
         window.location.replace(
-            "/staff-login.html"
+            mqRoleUrl("/staff-login.html")
         );
 
         throw new Error(

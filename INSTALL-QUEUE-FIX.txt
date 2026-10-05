@@ -1,0 +1,27 @@
+MEDIQUEUE ACCOUNT LINKED QUEUE FIX
+Based on your 1 October 2026 project ZIP.
+
+INSTALL
+1. Back up your current project.
+2. Stop the local server with Ctrl+C.
+3. Copy server.js into the MAIN project folder (the folder where you run npm start).
+4. Copy public/patient.js into that same main project's public folder.
+5. Keep your existing database, data, .env and all other files.
+6. Run npm start. Refresh the patient page with Ctrl+Shift+R once.
+7. For Render, commit and push the two changed files, then wait for successful deployment.
+
+BEHAVIOUR
+- The server restores the signed-in patient's waiting or called visit.
+- Logging out, returning home, changing browser/device or requesting again returns that active ticket.
+- A patient cannot take another department ticket while an active visit exists.
+- Completion releases the ticket. The existing staff queue reset cancels active visits and also releases it.
+- The New Queue button cannot discard an active account ticket.
+- Legacy duplicate active visits are not deleted: the oldest is restored first. Staff must resolve any existing duplicates.
+- This patch does not add an individual cancellation button; it honours the existing cancellation/reset workflow.
+
+CHECKED
+Syntax checks and real HTTP tests with isolated test data: active ticket lookup, logout/login, concurrent repeated requests, different-account isolation, called status, completion and cancellation/reset.
+Live Render/mobile-browser verification is still required.
+
+STORAGE
+The ticket is restored from the visits database. Keep the database and queue data persistent on your host. This patch does not prevent data loss if the host replaces its local files on restart or deployment.

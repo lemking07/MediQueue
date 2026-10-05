@@ -92,13 +92,21 @@ const makeRoleSession = name => session({
 });
 const patientSession = makeRoleSession("mq.patient.sid");
 const staffSession = makeRoleSession("mq.staff.sid");
+const adminSession = makeRoleSession("mq.admin.sid");
 app.use((req, res, next) => {
+    // A separate URL namespace chooses a separate cookie; never use a global browser role.
+    const adminRoute = req.path.startsWith('/admin/');
+    req.authRole = adminRoute ? 'admin' : 'staff';
+    req.authCookie = adminRoute ? 'mq.admin.sid' : 'mq.staff.sid';
+    if (adminRoute) req.url = req.url.slice('/admin'.length);
+    const redirect = res.redirect.bind(res);
+    res.redirect = (url) => redirect(adminRoute && typeof url === 'string' && /^\/(staff|admin|logout|force-logout)/.test(url) ? '/admin' + url : url);
     const route = req.path.toLowerCase();
     const patientRoute = route.startsWith("/api/patient/") ||
         route.startsWith("/api/appointments/") ||
         /^\/api\/queue\/take\/?$/i.test(req.path) ||
         /^\/patient(?:-[a-z]+)?\.html$/i.test(req.path);
-    (patientRoute ? patientSession : staffSession)(req, res, next);
+    (patientRoute ? patientSession : adminRoute ? adminSession : staffSession)(req, res, next);
 });
 
 // Individual staff accounts. Configure ADMIN_STAFF_ID and ADMIN_PASSWORD before first run.
@@ -978,7 +986,7 @@ async function requireStaffLogin(
     ) {
 
         const account=(await patientDb.prepare('SELECT role,approved FROM staff_accounts WHERE id=?').get(req.session.staffId));
-        if(account?.approved && account.role===req.session.staffRole)return next();
+        if(account?.approved && account.role===req.session.staffRole && account.role===req.authRole)return next();
     }
 
 
@@ -1015,17 +1023,6 @@ app.get(
     "/staff-login.html",
     (req, res) => {
 
-        if (
-            req.session &&
-            req.session.staffLoggedIn
-        ) {
-
-            return res.redirect(
-                "/staff.html"
-            );
-        }
-
-
         res.sendFile(
             path.join(
                 __dirname,
@@ -1048,7 +1045,7 @@ app.get(
 
         if (
             !req.session ||
-            !req.session.staffLoggedIn
+            !req.session.staffLoggedIn || req.session.staffRole !== req.authRole
         ) {
 
             return res.redirect(
@@ -1078,6 +1075,7 @@ app.get("/patient.html",(req,res) => {
     res.sendFile(path.join(__dirname,"public","patient.html"));
 });
 app.get('/admin.html', (req,res) => {
+  if(req.authRole !== 'admin') return res.redirect('/admin/admin.html');
   if (!req.session?.staffLoggedIn) return res.redirect('/staff-login.html');
   if (req.session.staffRole !== 'admin') return res.status(403).send('Administrator only.');
   res.set('Cache-Control','no-store');
@@ -1108,9 +1106,9 @@ app.post('/api/staff/signup',async(req,res)=>{
 app.post('/api/staff/login',async(req,res)=>{
  try {const {username,password,loginRole}=req.body||{};if(loginRole!==undefined&&!['staff','admin'].includes(loginRole))return res.status(400).json({error:'Invalid login type.'});const account=(await patientDb.prepare('SELECT * FROM staff_accounts WHERE username=? OR staff_id=?').get(username,username));
  if(!account||typeof password!=='string'||!(await staffVerify(password,account.password_hash)))return res.status(401).json({error:'Invalid login details.'});
- if(loginRole&&account.role!==loginRole)return res.status(403).json({error:loginRole==='admin'?'This account does not have administrator access.':'Use Admin Login for this account.'});
+ if(account.role!==req.authRole || (loginRole&&account.role!==loginRole))return res.status(403).json({error:loginRole==='admin'?'This account does not have administrator access.':'Use Admin Login for this account.'});
  if(!account.approved)return res.status(403).json({error:'Your account is awaiting administrator approval.'});
- req.session.regenerate(error=>{if(error)return res.status(500).json({error:'Unable to create session.'});req.session.staffLoggedIn=true;req.session.staffUsername=account.username;req.session.staffId=account.id;req.session.staffRole=account.role;req.session.save(err=>{if(err)return res.status(500).json({error:'Unable to save session.'});staffLog(account.id,'login').catch(error=>console.error('Login audit failed:',error.code||error.name));res.json({success:true});});});
+ req.session.regenerate(error=>{if(error)return res.status(500).json({error:'Unable to create session.'});req.session.staffLoggedIn=true;req.session.staffUsername=account.username;req.session.staffFullName=account.full_name;req.session.staffId=account.id;req.session.staffRole=account.role;req.session.save(err=>{if(err)return res.status(500).json({error:'Unable to save session.'});staffLog(account.id,'login').catch(error=>console.error('Login audit failed:',error.code||error.name));res.json({success:true});});});
  }catch(e){res.status(500).json({error:'Login failed.'});}
 });
 app.get('/api/staff/pending',requireStaffLogin,async (req,res)=>{
@@ -1254,6 +1252,7 @@ app.get(
                 null,
             staffId: req.session?.staffId || null,
             accountId: req.session?.staffId || null,
+            fullName: req.session?.staffFullName || req.session?.staffUsername || null,
             role: req.session?.staffRole || null
 
         });
@@ -1294,7 +1293,7 @@ app.post(
 
 
                 res.clearCookie(
-                    "mq.staff.sid"
+                    req.authCookie
                 );
 
 
@@ -1329,7 +1328,7 @@ app.get(
             () => {
 
                 res.clearCookie(
-                    "mq.staff.sid"
+                    req.authCookie
                 );
 
 

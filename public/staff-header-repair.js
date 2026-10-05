@@ -8,8 +8,8 @@
    const session = await response.json();
    if (!session.loggedIn) return;
    // The session endpoint exposes the authenticated username, not the full name.
-   const name = String(session.username || session.staffId || 'Staff').trim();
-   greeting.textContent = `Welcome, ${name}!`;
+   const name = String((session.fullName === 'Administrator' ? session.username : session.fullName) || session.username || 'User').trim();
+   greeting.textContent = `Welcome ${session.role === 'admin' ? 'Admin' : 'Staff'}, ${name}!`;
   } catch (error) { console.warn('Staff greeting unavailable:', error); }
  }
  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

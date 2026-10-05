@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0F9D8A">
+<title>MediQueue | Patient login</title>
+<link rel="stylesheet" href="account.css">
+</head>
+<body>
+<main class="account-card">
+<h1 id="brandName">MediQueue</h1>
+<p id="intro">Welcome back. Please log in to continue.</p>
+<form id="accountForm">
+<label id="nameField" hidden>Full name<input name="fullName" autocomplete="name" maxlength="100"></label>
+<label>Username<input name="username" required autocomplete="username" pattern="[A-Za-z0-9_.-]{3,32}" minlength="3" maxlength="32"></label>
+<label>Password<input name="password" required type="password" autocomplete="current-password" minlength="10" maxlength="128"></label>
+<label id="confirmField" hidden>Confirm password<input name="confirm" type="password" autocomplete="new-password" minlength="10" maxlength="128"></label>
+<p id="message" role="alert" aria-live="polite"></p>
+<button id="submit" type="submit">Log in</button>
+</form>
+<p class="account-switch" id="switchPrompt">Don't have an account? <button id="signupTab" class="text-link" type="button">Sign up</button></p>
+<p class="account-switch" id="loginPrompt" hidden>Already have an account? <button id="loginTab" class="text-link" type="button">Log in</button></p>
+</main>
+<script src="account-theme.js"></script><script src="account.js"></script>
+<script src="mediqueue-i18n.js"></script>
+</body></html>

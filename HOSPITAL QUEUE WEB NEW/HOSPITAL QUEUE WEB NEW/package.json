@@ -1,0 +1,15 @@
+{
+  "name": "hospital-queue-web",
+  "version": "1.0.0",
+  "description": "Hospital Queue Web System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.3"
+  }
+}

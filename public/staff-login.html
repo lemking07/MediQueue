@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+<head><script src="/role-context.js"></script>
 <style>html:not(.mq-theme-ready) body{visibility:hidden!important}</style>
 <meta name="theme-color" content="#7047e8">
 
@@ -110,10 +110,9 @@
             );
 
 
-        let loginRole = 'staff';
+        let loginRole = location.pathname.startsWith('/admin/') ? 'admin' : 'staff';
         const switchLogin = document.getElementById('switch-login');
-        switchLogin.addEventListener('click', () => {
-            loginRole = loginRole === 'staff' ? 'admin' : 'staff';
+        function renderLoginRole() {
             const isAdmin = loginRole === 'admin';
             document.getElementById('login-heading').textContent = isAdmin ? 'Admin Login' : 'Staff Login';
             document.getElementById('login-description').textContent = isAdmin ? 'Sign in with your administrator account.' : 'Login to access the hospital staff dashboard.';
@@ -125,6 +124,11 @@
             loginMessage.textContent = '';
             document.getElementById('password').value = '';
             document.title = `MediQueue | ${isAdmin ? 'Admin' : 'Staff'} Login`;
+        }
+        renderLoginRole();
+        switchLogin.addEventListener('click', event => {
+          event.preventDefault();
+          location.assign(loginRole === 'staff' ? '/admin/staff-login.html' : '/staff-login.html');
         });
 
         loginForm.addEventListener(
@@ -192,7 +196,7 @@
 
 
                     window.location.replace(
-                        "/staff.html"
+                        mqRoleUrl("/staff.html")
                     );
 
 
