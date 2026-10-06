@@ -1098,6 +1098,7 @@ app.use(
 
 app.post('/api/staff/signup',async(req,res)=>{
  try {const {staffId,fullName,username,password}=req.body||{};
+ if(/\s/u.test(String(username||'')))return res.status(400).json({error:'Username cannot contain spaces. Use an underscore (_) instead, for example NUR_MUHD.'});
  if(!/^[A-Za-z0-9-]{3,32}$/.test(staffId||'')||!String(fullName||'').trim()||!/^[A-Za-z0-9_.-]{3,32}$/.test(username||'')||typeof password!=='string'||password.length<10)return res.status(400).json({error:'Enter a valid college ID, name, username and password (at least 10 characters).'});
  (await patientDb.prepare('INSERT INTO staff_accounts (staff_id,full_name,username,password_hash) VALUES (?,?,?,?)').run(staffId,fullName.trim(),username,await staffHash(password)));
  res.status(201).json({success:true,message:'Account submitted for administrator approval.'});
@@ -1369,6 +1370,7 @@ function requirePatient(req, res, next) {
 }
 pushAlerts = await require("./lib/push-notifications").setupPush(patientDb, app, requirePatient);
 app.post("/api/patient/signup", async (req,res) => {
+    if(/\s/u.test(String(req.body?.username||"")))return res.status(400).json({error:"Username cannot contain spaces. Use an underscore (_) instead, for example NUR_MUHD."});
     const fullName = String(req.body?.fullName || "").trim();
     const username = String(req.body?.username || "").trim().toLowerCase();
     const password = req.body?.password;
